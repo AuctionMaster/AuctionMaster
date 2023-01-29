@@ -1,0 +1,17 @@
+name: AuctionMaster
+authors: [Intel]
+version: 4.1.3
+main: me.intel.AuctionMaster.AuctionMaster
+description: The best auction house system!
+website: https://discord.gg/nchk86TKMT
+api-version: "1.13"
+softdepend: [LiteBans, CustomEconomy, Citizens, Vault, PlayerPoints, TokenManager, PlaceholderAPI, Skript, ProtocolLib, HeadDatabase]
+
+commands:
+  auction:
+    aliases: [ah, auctions, auctionhouse, ahouse]
+    description: Use this command to open the auction menu.
+  ahview:
+    description: View an auction.
+  ahadmin:
+    description: Use this command for admin things.
