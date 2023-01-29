@@ -9,7 +9,7 @@ public interface Auction {
      boolean checkForDeletion();
 
      boolean forceEnd();
-
+     long getBuyTime();
      void addMinutesToAuction(int minutes);
 
      void setEndingDate(long date);

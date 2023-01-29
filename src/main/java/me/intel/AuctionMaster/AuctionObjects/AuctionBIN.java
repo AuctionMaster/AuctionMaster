@@ -20,6 +20,7 @@ public class AuctionBIN implements Auction{
     String id;
     private double coins;
     private long endingDate;
+    private long buyTime;
     private String sellerDisplayName;
     private String sellerName;
     private String sellerUUID;
@@ -45,6 +46,22 @@ public class AuctionBIN implements Auction{
         toChange.put("ending", String.valueOf(endingDate));
         AuctionMaster.auctionsDatabase.updateAuctionField(id, toChange);
         return true;
+    }
+
+    @Override
+    public long getBuyTime() {
+        if(this.buyTime > System.currentTimeMillis()) {
+            return System.currentTimeMillis() - this.buyTime;
+        } else {
+            return 0L;
+        }
+    }
+    public boolean isBuyable() {
+        if(this.buyTime > System.currentTimeMillis()) {
+            return false;
+        } else {
+            return true;
+        }
     }
 
     public void addMinutesToAuction(int minutes){
@@ -94,6 +111,7 @@ public class AuctionBIN implements Auction{
         this.item= Utils.itemFromBase64(item);
         if(this.item==null)
             return;
+        this.buyTime = System.currentTimeMillis() + 20000L;
         this.id=id;
         this.coins=coins;
         this.endingDate=endingDate;
