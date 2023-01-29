@@ -12,9 +12,10 @@ import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import com.zaxxer.hikari.HikariDataSource;
 
 public class MySQLDatabase implements DatabaseHandler {
-    private Connection connection;
+    private HikariDataSource hikari;
     private String user;
     private String password;
     private String link;
@@ -32,11 +33,15 @@ public class MySQLDatabase implements DatabaseHandler {
         this.user = section.getString("user");
         this.password = section.getString("password");
 
-        this.connection = getConnection();
-        if (this.connection == null) {
-            AuctionMaster.plugin.getLogger().warning("There is a problem in MySQL database!");
-            return;
-        }
+        Database database = new Database()
+                .setJdbcUrl(url)
+                .setPassword(password)
+                .setUsername(user)
+                .setup();
+
+        hikari = database.getHikari();
+
+
         loadAuctionsFile();
 
         /*
@@ -70,28 +75,43 @@ public class MySQLDatabase implements DatabaseHandler {
 
         if (section.getBoolean("refresh.setting")) {
             long seconds = section.getInt("refresh.time", 5) * 20L;
-            Bukkit.getScheduler().runTaskTimerAsynchronously(AuctionMaster.plugin, this::refreshAuctions, seconds, seconds);
+            Bukkit.getScheduler().runTaskTimerAsynchronously(AuctionMaster.plugin, () -> {
+                //Bukkit.getLogger().info("Refreshing auctions...");  //DEBUG
+                this.refreshAuctions();
+                addAllToBrowse();
+                loadPreviewItems();
+            }, seconds, seconds);
         }
     }
 
-    public Connection getConnection() {
+/*    public Connection getConnection() {
         try {
-            if (this.connection != null)
-                this.connection.close();
-
-            Class.forName(this.link != null && !this.link.equals("") ? this.link : "com.mysql.jdbc.Driver");
-            return this.connection = DriverManager.getConnection(this.url, this.user, this.password);
-        } catch (SQLException | ClassNotFoundException throwable) {
-            throwable.printStackTrace();
-            AuctionMaster.plugin.getLogger().warning("There is a problem in MySQL database!");
+            return hikari.getConnection();
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
         }
+    }*/
 
-        return null;
-    }
+
+
+    //public Connection getConnection() {
+    //    try {
+    //        if (this.connection != null)
+    //            this.connection.close();
+//
+    //        Class.forName(this.link != null && !this.link.equals("") ? this.link : "com.mysql.jdbc.Driver");
+    //        return this.connection = DriverManager.getConnection(this.url, this.user, this.password);
+    //    } catch (SQLException | ClassNotFoundException throwable) {
+    //        throwable.printStackTrace();
+    //        AuctionMaster.plugin.getLogger().warning("There is a problem in MySQL database!");
+    //    }
+//
+    //    return null;
+    //}
 
     private void loadAuctionsFile() {
         try (
-                Connection conn = getConnection();
+                Connection conn = hikari.getConnection();
                 PreparedStatement stmt = conn.prepareStatement(
                         "CREATE TABLE IF NOT EXISTS Auctions " +
                                 "(id VARCHAR(36) not NULL, " +
@@ -115,7 +135,7 @@ public class MySQLDatabase implements DatabaseHandler {
         }
 
         try (
-                Connection conn = getConnection();
+                Connection conn = hikari.getConnection();
                 PreparedStatement stmt = conn.prepareStatement(
                         "CREATE TABLE IF NOT EXISTS AuctionLists " +
                                 "(id VARCHAR(36) not NULL, " +
@@ -131,7 +151,7 @@ public class MySQLDatabase implements DatabaseHandler {
         }
 
         try (
-                Connection conn = getConnection();
+                Connection conn = hikari.getConnection();
                 PreparedStatement stmt = conn.prepareStatement(
                         "CREATE TABLE IF NOT EXISTS PreviewData " +
                                 "(id VARCHAR(36) not NULL, " +
@@ -148,7 +168,7 @@ public class MySQLDatabase implements DatabaseHandler {
 
     public void loadPreviewItems(){
         try (
-                Connection Auctions = getConnection();
+                Connection Auctions = hikari.getConnection();
                 PreparedStatement select = Auctions.prepareStatement("SELECT * FROM PreviewData")
         ) {
             ResultSet resultSet = select.executeQuery();
@@ -170,7 +190,7 @@ public class MySQLDatabase implements DatabaseHandler {
 
     public void deletePreviewItems(String id){
         try {
-            Connection Auctions = getConnection();
+            Connection Auctions = hikari.getConnection();
             PreparedStatement stmt1 = Auctions.prepareStatement("DELETE FROM PreviewData WHERE id = ?;");
 
             stmt1.setString(1, id);
@@ -192,7 +212,7 @@ public class MySQLDatabase implements DatabaseHandler {
 
     public void registerPreviewItem(String player, String item) {
         try (
-                Connection Auctions = getConnection();
+                Connection Auctions = hikari.getConnection();
                 PreparedStatement stmt1 = Auctions.prepareStatement("UPDATE PreviewData SET item = ? WHERE id = ?");
                 PreparedStatement stmt2 = Auctions.prepareStatement("INSERT INTO PreviewData VALUES(?, ?)")
         ) {
@@ -215,7 +235,7 @@ public class MySQLDatabase implements DatabaseHandler {
 
     public void removePreviewItem(String player) {
         try (
-                Connection Auctions = getConnection();
+                Connection Auctions = hikari.getConnection();
                 PreparedStatement stmt = Auctions.prepareStatement("DELETE FROM PreviewData WHERE id = ?")
         ) {
             stmt.setString(1, player);
@@ -231,7 +251,7 @@ public class MySQLDatabase implements DatabaseHandler {
     public void insertAuction(Auction auction){
         Bukkit.getScheduler().runTaskAsynchronously(AuctionMaster.plugin, () -> {
             try(
-                    Connection Auctions = this.connection;
+                    Connection Auctions = hikari.getConnection();
                     PreparedStatement stmt = Auctions.prepareStatement("INSERT INTO Auctions VALUES (?, ?, ?, ?, ?, ?, ?, ?, '"+(auction.isBIN()?"BIN":"")+" 0,,, ', 0)")
             ){
                 stmt.setString(1, auction.getId());
@@ -260,7 +280,7 @@ public class MySQLDatabase implements DatabaseHandler {
             toSet = toSet.substring(1);
 
             try (
-                    Connection Auctions = getConnection();
+                    Connection Auctions = hikari.getConnection();
                     PreparedStatement stmt = Auctions.prepareStatement("UPDATE Auctions SET " + toSet + " WHERE id = ?")
             ) {
                 stmt.setString(1, id);
@@ -277,7 +297,7 @@ public class MySQLDatabase implements DatabaseHandler {
     public boolean deleteAuction(String id){
         Bukkit.getScheduler().runTaskAsynchronously(AuctionMaster.plugin, () -> {
             try {
-                Connection Auctions = getConnection();
+                Connection Auctions = hikari.getConnection();
                 PreparedStatement stmt = Auctions.prepareStatement("DELETE FROM Auctions WHERE id = ?");
 
                 stmt.setString(1, id);
@@ -296,7 +316,7 @@ public class MySQLDatabase implements DatabaseHandler {
     public void addToOwnBids(String player, String toAdd){
         Bukkit.getScheduler().runTaskAsynchronously(AuctionMaster.plugin, () -> {
             try (
-                    Connection Auctions = getConnection();
+                    Connection Auctions = hikari.getConnection();
                     PreparedStatement stmt1 = Auctions.prepareStatement("UPDATE AuctionLists SET ownBids = CONCAT(ownBids, ?) WHERE id = ?");
                     PreparedStatement stmt2 = Auctions.prepareStatement("INSERT INTO AuctionLists VALUES(?, '', ?)")
             ) {
@@ -321,7 +341,7 @@ public class MySQLDatabase implements DatabaseHandler {
     public boolean removeFromOwnBids(String player, String toRemove){
         Bukkit.getScheduler().runTaskAsynchronously(AuctionMaster.plugin, () -> {
             try (
-                    Connection Auctions = getConnection();
+                    Connection Auctions = hikari.getConnection();
                     PreparedStatement stmt = Auctions.prepareStatement("UPDATE AuctionLists SET ownBids = REPLACE(REPLACE(REPLACE(ownBids, '" + toRemove + ".', ''), '." + toRemove + "', ''), '" + toRemove + "', '') WHERE id = ?")
             ) {
                 stmt.setString(1, player);
@@ -340,7 +360,7 @@ public class MySQLDatabase implements DatabaseHandler {
     public void resetOwnBids(String player){
         Bukkit.getScheduler().runTaskAsynchronously(AuctionMaster.plugin, () -> {
             try (
-                    Connection Auctions = getConnection();
+                    Connection Auctions = hikari.getConnection();
                     PreparedStatement stmt = Auctions.prepareStatement("UPDATE AuctionLists SET ownBids = '' WHERE id = ?")
             ) {
                 stmt.setString(1, player);
@@ -357,7 +377,7 @@ public class MySQLDatabase implements DatabaseHandler {
     public boolean removeFromOwnAuctions(String player, String toRemove){
         Bukkit.getScheduler().runTaskAsynchronously(AuctionMaster.plugin, () -> {
             try (
-                    Connection Auctions = getConnection();
+                    Connection Auctions = hikari.getConnection();
                     PreparedStatement stmt = Auctions.prepareStatement("UPDATE AuctionLists SET ownAuctions = REPLACE(REPLACE(REPLACE(ownAuctions, '" + toRemove + ".', ''), '." + toRemove + "', ''), '" + toRemove + "', '') WHERE id = ?")
             ) {
                 stmt.setString(1, player);
@@ -376,7 +396,7 @@ public class MySQLDatabase implements DatabaseHandler {
     public void resetOwnAuctions(String player){
         Bukkit.getScheduler().runTaskAsynchronously(AuctionMaster.plugin, () -> {
             try (
-                    Connection Auctions = getConnection();
+                    Connection Auctions = hikari.getConnection();
                     PreparedStatement stmt = Auctions.prepareStatement("UPDATE AuctionLists SET ownAuctions = '' WHERE id = ?")
             ) {
                 stmt.setString(1, player);
@@ -393,7 +413,7 @@ public class MySQLDatabase implements DatabaseHandler {
     public void addToOwnAuctions(String player, String toAdd){
         Bukkit.getScheduler().runTaskAsynchronously(AuctionMaster.plugin, () -> {
             try (
-                    Connection Auctions = getConnection();
+                    Connection Auctions = hikari.getConnection();
                     PreparedStatement stmt1 = Auctions.prepareStatement("UPDATE AuctionLists SET ownAuctions = CONCAT(ownAuctions, ?) WHERE id = ?");
                     PreparedStatement stmt2 = Auctions.prepareStatement("INSERT INTO AuctionLists VALUES(?, ?, '')")
             ) {
@@ -417,7 +437,7 @@ public class MySQLDatabase implements DatabaseHandler {
 
     public void adjustAuctionTimers(long toAdd) {
         try (
-                Connection Auctions = getConnection();
+                Connection Auctions = hikari.getConnection();
                 PreparedStatement stmt = Auctions.prepareStatement("UPDATE Auctions SET ending=ending+?")
         ) {
             stmt.setLong(1, toAdd);
@@ -431,15 +451,18 @@ public class MySQLDatabase implements DatabaseHandler {
     }
 
     public void addAllToBrowse() {
-        for (Auction auction : AuctionMaster.auctionsHandler.auctions.values())
-            if (!auction.isEnded())
+        for (Auction auction : AuctionMaster.auctionsHandler.auctions.values()) {
+            if (!auction.isEnded()) {
+
                 AuctionMaster.auctionsHandler.addToBrowse(auction);
+            }
+        }
     }
 
     private void refreshAuctions() {
         Bukkit.getScheduler().runTaskAsynchronously(AuctionMaster.plugin, () -> {
             try (
-                    Connection connection = getConnection();
+                    Connection connection = hikari.getConnection();
                     PreparedStatement statement = connection.prepareStatement("SELECT * FROM Auctions")
             ) {
                 ResultSet set = statement.executeQuery();
@@ -460,7 +483,7 @@ public class MySQLDatabase implements DatabaseHandler {
             }
 
             try (
-                    Connection connection = getConnection();
+                    Connection connection = hikari.getConnection();
                     PreparedStatement statement = connection.prepareStatement("DELETE FROM AuctionLists WHERE ownAuctions='' and ownBids=''")
             ) {
                 statement.executeUpdate();
@@ -469,7 +492,7 @@ public class MySQLDatabase implements DatabaseHandler {
             }
 
             try (
-                    Connection connection = getConnection();
+                    Connection connection = hikari.getConnection();
                     PreparedStatement statement = connection.prepareStatement("SELECT * FROM AuctionLists")
             ) {
                 ResultSet set = statement.executeQuery();
@@ -491,8 +514,9 @@ public class MySQLDatabase implements DatabaseHandler {
                         list.add(auction);
                     }
 
-                    if (!list.isEmpty())
+                    if (!list.isEmpty()) {
                         AuctionMaster.auctionsHandler.ownAuctions.put(id, list);
+                    }
                     list = new ArrayList<>();
 
                     for (String bidID : ownBids.split("\\.")) {
@@ -506,8 +530,9 @@ public class MySQLDatabase implements DatabaseHandler {
                         list.add(auction);
                     }
 
-                    if (!list.isEmpty())
+                    if (!list.isEmpty()) {
                         AuctionMaster.auctionsHandler.bidAuctions.put(id, list);
+                    }
                 }
             } catch (Exception e) {
                 e.printStackTrace();
