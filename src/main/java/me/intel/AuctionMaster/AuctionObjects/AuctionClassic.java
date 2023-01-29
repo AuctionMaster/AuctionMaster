@@ -53,6 +53,16 @@ public class AuctionClassic implements Auction{
         return true;
     }
 
+    @Override
+    public long getBuyTime() {
+        return 0;
+    }
+
+    @Override
+    public boolean isBuyable() {
+        return true;
+    }
+
     public void addMinutesToAuction(int minutes){
         endingDate+=minutes* 60000L;
         HashMap<String, String> toChange = new HashMap<>();

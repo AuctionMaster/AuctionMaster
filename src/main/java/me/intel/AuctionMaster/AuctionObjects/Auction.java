@@ -10,6 +10,7 @@ public interface Auction {
 
      boolean forceEnd();
      long getBuyTime();
+     boolean isBuyable();
      void addMinutesToAuction(int minutes);
 
      void setEndingDate(long date);
