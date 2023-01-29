@@ -553,4 +553,26 @@ public class AuctionClassic implements Auction{
     public double getCoins() {
         return coins;
     }
+
+    @Override
+    public boolean equals(Object obj) {
+
+        if(this == obj)
+            return true;
+
+        if(obj instanceof Auction)
+            if(this.id.equals(((Auction) obj).getId()))
+                return true;
+
+
+        return false;
+    }
+
+    @Override
+    public int hashCode() {
+        int hash = 7;
+        hash = 31 * hash + id.hashCode();
+
+        return hash;
+    }
 }
