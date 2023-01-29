@@ -109,6 +109,7 @@ public class ViewAuctionAdminMenu {
                         else {
                             if (auction.forceEnd()) {
                                 Utils.injectToLog("[Admin Force End] Auction with ID="+auction.getId()+" was forcefully terminated by "+player.getName());
+                                AuctionMaster.auctionsDatabase.deleteAuction(auction.getId());
                                 player.sendMessage(Utils.chat("&aAuction was forcefully terminated!"));
                             }
                             else
