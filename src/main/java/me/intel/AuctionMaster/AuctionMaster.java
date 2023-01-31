@@ -27,7 +27,6 @@ import me.intel.AuctionMaster.bStats.MetricsLite;
 import me.intel.AuctionMaster.database.DatabaseHandler;
 import me.intel.AuctionMaster.database.MySQLDatabase;
 import me.intel.AuctionMaster.database.SQLiteDatabase;
-import me.intel.AuctionMaster.Currency.*;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -45,7 +44,7 @@ import java.io.IOException;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 
-public class AuctionMaster extends JavaPlugin{
+public class AuctionMaster extends JavaPlugin {
 
     public static AuctionMaster plugin;
     public static me.intel.AuctionMaster.API.API API;
@@ -81,21 +80,30 @@ public class AuctionMaster extends JavaPlugin{
     public static Long serverCloseDate = 0L;
     public static String Webhook_URL = "";
     public static boolean SendEvents;
+    public static boolean customTax;
+
+    private void customTax() {
+        if (AuctionMaster.plugin.getConfig().getBoolean("customtax")) customTax = true;
+        else customTax = false;
+    }
+
     private void inputSetup() {
         if (AuctionMaster.plugin.getConfig().getBoolean("use-anvil-instead-sign"))
             inputType = "anvil";
         else if (!AuctionMaster.plugin.getConfig().getBoolean("use-chat-instead-sign") && AuctionMaster.hasProtocolLib)
             inputType = "sign";
     }
+
     private void EventSetup() {
         ConfigurationSection location = AuctionMaster.plugin.getConfig().getConfigurationSection("events");
         Webhook_URL = location.getString("url");
-        SendEvents = AuctionMaster.plugin.getConfig().getBoolean("sendEvents",true);
+        SendEvents = AuctionMaster.plugin.getConfig().getBoolean("sendEvents", true);
     }
-    private void currencySetup(){
+
+    private void currencySetup() {
         String currency = currencyCfg.getString("currency-type");
-        if(currency.equalsIgnoreCase("Vault")){
-            economy=new VaultImpl();
+        if (currency.equalsIgnoreCase("Vault")) {
+            economy = new VaultImpl();
         } else if (currency.equalsIgnoreCase("CustomEconomy-Balance")) {
             economy = new CustomEconomyBalance();
         } else if (currency.equalsIgnoreCase("CustomEconomy-Tokens")) {
@@ -109,26 +117,24 @@ public class AuctionMaster extends JavaPlugin{
         }
     }
 
-    private void loadPlaceholderAPISupport(){
-        if(Bukkit.getPluginManager().getPlugin("PlaceholderAPI") != null) {
+    private void loadPlaceholderAPISupport() {
+        if (Bukkit.getPluginManager().getPlugin("PlaceholderAPI") != null) {
             utilsAPI = new PlaceholderAPISupportYes();
             new PlaceholderRegister().register();
-        }
-        else
-            utilsAPI=new PlaceholderAPISupportNo();
+        } else
+            utilsAPI = new PlaceholderAPISupportNo();
     }
 
-    private void setupItemConstructor(){
+    private void setupItemConstructor() {
 
-        if(!upperVersion) {
+        if (!upperVersion) {
             itemConstructor = new ItemConstructorLegacy();
-        }
-        else {
+        } else {
             itemConstructor = new ItemConstructorNew();
         }
     }
 
-    private void setupAuctionNPC(){
+    private void setupAuctionNPC() {
         new BukkitRunnable() {
             @Override
             public void run() {
@@ -154,7 +160,7 @@ public class AuctionMaster extends JavaPlugin{
         }
     }
 
-    public static boolean hasProtocolLib=false;
+    public static boolean hasProtocolLib = false;
 
     @Override
     public void onEnable() {
@@ -185,10 +191,10 @@ public class AuctionMaster extends JavaPlugin{
             serverCloseDate = configuration.getLong("serverCloseDate", 0L);
         }
 
-        numberFormatHelper=new NumberFormatHelper();
+        numberFormatHelper = new NumberFormatHelper();
 
         String version = Bukkit.getVersion();
-        upperVersion= !version.contains("1.8") && !version.contains("1.9") && !version.contains("1.10") && !version.contains("1.11") && !version.contains("1.12");
+        upperVersion = !version.contains("1.8") && !version.contains("1.9") && !version.contains("1.10") && !version.contains("1.11") && !version.contains("1.12");
 
         setupItemConstructor();
 
@@ -206,13 +212,13 @@ public class AuctionMaster extends JavaPlugin{
         toolsCfg = YamlConfiguration.loadConfiguration(new File(this.getDataFolder(), "menus/tools.yml"));
         weaponsCfg = YamlConfiguration.loadConfiguration(new File(this.getDataFolder(), "menus/weapons.yml"));
 
-        if(Bukkit.getPluginManager().getPlugin("HeadDatabase") != null)
+        if (Bukkit.getPluginManager().getPlugin("HeadDatabase") != null)
             new HeadDatabaseAPI();
 
-        configLoad=new ConfigLoad();
+        configLoad = new ConfigLoad();
         loadPlaceholderAPISupport();
-        auctionsHandler=new AuctionsHandler();
-        if(getConfig().getBoolean("use-delivery-system")) {
+        auctionsHandler = new AuctionsHandler();
+        if (getConfig().getBoolean("use-delivery-system")) {
             deliveries = new Deliveries();
             new DeliveryGUI();
             new DeliveryCoinsGUI();
@@ -226,11 +232,12 @@ public class AuctionMaster extends JavaPlugin{
         }
 
         if (Bukkit.getPluginManager().getPlugin("ProtocolLib") != null)
-            hasProtocolLib=true;
+            hasProtocolLib = true;
 
         currencySetup();
         EventSetup();
         setupAuctionNPC();
+        customTax();
 
         inputSetup();
         new SelectDurationGUI();
@@ -240,11 +247,11 @@ public class AuctionMaster extends JavaPlugin{
         new EditDurationGUI();
 
         new Commands();
-        API=new API();
+        API = new API();
     }
 
     @Override
-    public void onDisable(){
+    public void onDisable() {
         for (HumanEntity player : Bukkit.getOnlinePlayers()) {
             player.closeInventory();
         }
