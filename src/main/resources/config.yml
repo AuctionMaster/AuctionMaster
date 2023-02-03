@@ -63,6 +63,18 @@ database:
       setting: false # enable or disable
       time: 1 # seconds (it's better to write less time)
 
+customtax: false  # true or false
+# Setting this to true you can make custom tax using permissions
+
+# This permission determinates how much player will have to pay for creating a Bin (Buy it now) auction
+# 'auctionmaster.customtax.bin.number'
+
+# This permission determinates how much player will have to pay for creating a Bid auction
+# 'auctionmaster.customtax.bid.number'
+
+# it will take the lowest possible
+# If you don't give this permission it will take default tax
+
 #How much time you want to add to an auction
 #when a player bids:
 #Time in seconds
