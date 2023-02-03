@@ -17,9 +17,9 @@ import static me.intel.AuctionMaster.AuctionMaster.othersCfg;
 
 public class Others implements Category{
 
-    ArrayList<Auction> orderedAuctionsMoney = new ArrayList<>();
-    ArrayList<Auction> orderedAuctionsTime = new ArrayList<>();
-    ArrayList<Auction> orderedAuctionsBids = new ArrayList<>();
+    static ArrayList<Auction> orderedAuctionsMoney = new ArrayList<>();
+    static ArrayList<Auction> orderedAuctionsTime = new ArrayList<>();
+    static ArrayList<Auction> orderedAuctionsBids = new ArrayList<>();
 
     private final ItemStack backgroundGlass;
     private int slot;
