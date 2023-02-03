@@ -1,6 +1,7 @@
 package me.intel.AuctionMaster.Menus;
 
 import me.intel.AuctionMaster.AuctionMaster;
+import me.intel.AuctionMaster.AuctionObjects.Auction;
 import me.intel.AuctionMaster.Utils.Utils;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
@@ -13,6 +14,7 @@ import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.inventory.Inventory;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class MainAuctionMenu {
 
@@ -20,7 +22,7 @@ public class MainAuctionMenu {
     private Player player;
     private final ClickListen listener = new ClickListen();
 
-    public MainAuctionMenu(Player player){
+    public MainAuctionMenu(Player player) {
         Bukkit.getScheduler().runTaskAsynchronously(AuctionMaster.plugin, () -> {
             this.player = player;
             inventory = Bukkit.createInventory(player, AuctionMaster.configLoad.mainMenuSize, AuctionMaster.utilsAPI.chat(player, AuctionMaster.configLoad.mainMenuName));
@@ -29,18 +31,18 @@ public class MainAuctionMenu {
                 for (int i = 0; i < AuctionMaster.configLoad.mainMenuSize; i++)
                     inventory.setItem(i, AuctionMaster.configLoad.backgroundGlass.clone());
 
-                    ArrayList<String> lore = new ArrayList<>();
-                    for (String line : AuctionMaster.configLoad.closeMenuLore)
-                        lore.add(AuctionMaster.utilsAPI.chat(player, line));
-                    if (AuctionMaster.menusCfg.getInt("main-menu.close-menu-slot") >= 0)
-                        inventory.setItem(AuctionMaster.menusCfg.getInt("main-menu.close-menu-slot"), AuctionMaster.itemConstructor.getItem(AuctionMaster.configLoad.closeMenuMaterial, AuctionMaster.utilsAPI.chat(player, AuctionMaster.configLoad.closeMenuName), lore));
+            ArrayList<String> lore = new ArrayList<>();
+            for (String line : AuctionMaster.configLoad.closeMenuLore)
+                lore.add(AuctionMaster.utilsAPI.chat(player, line));
+            if (AuctionMaster.menusCfg.getInt("main-menu.close-menu-slot") >= 0)
+                inventory.setItem(AuctionMaster.menusCfg.getInt("main-menu.close-menu-slot"), AuctionMaster.itemConstructor.getItem(AuctionMaster.configLoad.closeMenuMaterial, AuctionMaster.utilsAPI.chat(player, AuctionMaster.configLoad.closeMenuName), lore));
 
             lore = new ArrayList<>();
             for (String line : AuctionMaster.configLoad.browsingMenuItemLore)
                 lore.add(AuctionMaster.utilsAPI.chat(player, line));
 
             if (AuctionMaster.menusCfg.getInt("main-menu.browsing-menu-slot") >= 0)
-            inventory.setItem(AuctionMaster.menusCfg.getInt("main-menu.browsing-menu-slot"), AuctionMaster.itemConstructor.getItem(AuctionMaster.configLoad.browsingMenuItemMaterial, AuctionMaster.utilsAPI.chat(player, AuctionMaster.configLoad.browsingMenuItemName), lore));
+                inventory.setItem(AuctionMaster.menusCfg.getInt("main-menu.browsing-menu-slot"), AuctionMaster.itemConstructor.getItem(AuctionMaster.configLoad.browsingMenuItemMaterial, AuctionMaster.utilsAPI.chat(player, AuctionMaster.configLoad.browsingMenuItemName), lore));
 
             lore = new ArrayList<>();
             if (AuctionMaster.auctionsHandler.bidAuctions.containsKey(player.getUniqueId().toString())) {
@@ -55,7 +57,7 @@ public class MainAuctionMenu {
             }
 
             if (AuctionMaster.menusCfg.getInt("main-menu.view-bids-menu-slot") >= 0)
-            inventory.setItem(AuctionMaster.menusCfg.getInt("main-menu.view-bids-menu-slot"), AuctionMaster.itemConstructor.getItem(AuctionMaster.configLoad.viewBidsMenuItemMaterial, AuctionMaster.utilsAPI.chat(player, AuctionMaster.configLoad.viewBidsMenuItemName), lore));
+                inventory.setItem(AuctionMaster.menusCfg.getInt("main-menu.view-bids-menu-slot"), AuctionMaster.itemConstructor.getItem(AuctionMaster.configLoad.viewBidsMenuItemMaterial, AuctionMaster.utilsAPI.chat(player, AuctionMaster.configLoad.viewBidsMenuItemName), lore));
 
 
             lore = new ArrayList<>();
@@ -72,15 +74,15 @@ public class MainAuctionMenu {
             }
 
             if (AuctionMaster.menusCfg.getInt("main-menu.manage-auctions-menu-slot") >= 0)
-            inventory.setItem(AuctionMaster.menusCfg.getInt("main-menu.manage-auctions-menu-slot"), AuctionMaster.itemConstructor.getItem(AuctionMaster.configLoad.manageAuctionsItemMaterial, AuctionMaster.utilsAPI.chat(player, AuctionMaster.configLoad.manageAuctionsItemName), lore));
+                inventory.setItem(AuctionMaster.menusCfg.getInt("main-menu.manage-auctions-menu-slot"), AuctionMaster.itemConstructor.getItem(AuctionMaster.configLoad.manageAuctionsItemMaterial, AuctionMaster.utilsAPI.chat(player, AuctionMaster.configLoad.manageAuctionsItemName), lore));
 
-            if (AuctionMaster.deliveries != null && AuctionMaster.menusCfg.getInt("main-menu.delivery-menu-slot")!=-1) {
+            if (AuctionMaster.deliveries != null && AuctionMaster.menusCfg.getInt("main-menu.delivery-menu-slot") != -1) {
                 lore = new ArrayList<>();
                 for (String line : AuctionMaster.configLoad.mainMenuDeliveryLore)
                     lore.add(AuctionMaster.utilsAPI.chat(player, line));
 
                 if (AuctionMaster.menusCfg.getInt("main-menu.delivery-menu-slot") >= 0)
-                inventory.setItem(AuctionMaster.menusCfg.getInt("main-menu.delivery-menu-slot"), AuctionMaster.itemConstructor.getItem(AuctionMaster.configLoad.mainMenuDeliveryItem, AuctionMaster.utilsAPI.chat(player, AuctionMaster.configLoad.mainMenuDeliveryName), lore));
+                    inventory.setItem(AuctionMaster.menusCfg.getInt("main-menu.delivery-menu-slot"), AuctionMaster.itemConstructor.getItem(AuctionMaster.configLoad.mainMenuDeliveryItem, AuctionMaster.utilsAPI.chat(player, AuctionMaster.configLoad.mainMenuDeliveryName), lore));
             }
 
             Bukkit.getScheduler().runTask(AuctionMaster.plugin, () -> {
@@ -92,38 +94,55 @@ public class MainAuctionMenu {
 
     public class ClickListen implements Listener {
         @EventHandler
-        public void onClick(InventoryClickEvent e){
-            if(e.getInventory().equals(inventory)){
+        public void onClick(InventoryClickEvent e) {
+            if (e.getInventory().equals(inventory)) {
                 e.setCancelled(true);
-                if(e.getCurrentItem()==null || e.getCurrentItem().getType().equals(Material.AIR)) {
+                if (e.getCurrentItem() == null || e.getCurrentItem().getType().equals(Material.AIR)) {
                     return;
                 }
-                if(e.getClickedInventory().equals(inventory)) {
+                if (e.getClickedInventory().equals(inventory)) {
                     if (e.getSlot() == AuctionMaster.menusCfg.getInt("main-menu.manage-auctions-menu-slot")) {
                         Utils.playSound(player, "own-auctions-click");
-                        if (!AuctionMaster.auctionsHandler.ownAuctions.containsKey(player.getUniqueId().toString()))
+                        List<Auction> test = new ArrayList<>();
+                        if (AuctionMaster.auctionsHandler.ownAuctions.get(player.getUniqueId().toString()) != null) {
+                            AuctionMaster.auctionsHandler.ownAuctions.get(player.getUniqueId().toString()).forEach(auction -> {
+                                if (AuctionMaster.auctionsDatabase.checkDBIsClaimedItem(auction.getId())) {
+                                    test.add(auction);
+                                    System.out.println("(4) FOREACH 2");
+                                    //AuctionMaster.auctionsHandler.ownAuctions.get(player.getUniqueId().toString()).remove(auction);
+                                }
+
+                            });
+                            test.forEach(auction -> {
+                                System.out.println("(4)FOREACH 1");
+                                AuctionMaster.auctionsHandler.ownAuctions.get(player.getUniqueId().toString()).remove(auction);
+                            });
+                        }
+                        if (AuctionMaster.auctionsHandler.ownAuctions.get(player.getUniqueId().toString())== null||AuctionMaster.auctionsHandler.ownAuctions.get(player.getUniqueId().toString()).isEmpty()) {
+                            System.out.println("(3) Test");
+                            AuctionMaster.auctionsHandler.ownAuctions.remove(player.getUniqueId().toString());
+                        }
+                        if (!AuctionMaster.auctionsHandler.ownAuctions.containsKey(player.getUniqueId().toString())) {
+                            System.out.println("(1) test");
                             new CreateAuctionMainMenu(player);
-                        else
+                        }else{
+                        System.out.println("(2) test");
                             new ManageOwnAuctionsMenu(player, 1);
-                    }
-                    else if(e.getSlot() == AuctionMaster.menusCfg.getInt("main-menu.browsing-menu-slot")){
+                        }
+                    } else if (e.getSlot() == AuctionMaster.menusCfg.getInt("main-menu.browsing-menu-slot")) {
                         Utils.playSound(player, "auction-browser-click");
                         new BrowsingAuctionsMenu(player, AuctionMaster.menusCfg.getString("browsing-menu.default-category"), 0, null);
-                    }
-                    else if(e.getSlot() == AuctionMaster.menusCfg.getInt("main-menu.view-bids-menu-slot")){
-                        if(AuctionMaster.auctionsHandler.bidAuctions.containsKey(player.getUniqueId().toString())) {
+                    } else if (e.getSlot() == AuctionMaster.menusCfg.getInt("main-menu.view-bids-menu-slot")) {
+                        if (AuctionMaster.auctionsHandler.bidAuctions.containsKey(player.getUniqueId().toString())) {
                             Utils.playSound(player, "view-bids-has-click");
                             new ManageOwnBidsMenu(player);
-                        }
-                        else{
+                        } else {
                             Utils.playSound(player, "view-bids-no-has-click");
                         }
-                    }
-                    else if(AuctionMaster.deliveries!=null && e.getSlot()== AuctionMaster.menusCfg.getInt("main-menu.delivery-menu-slot")){
+                    } else if (AuctionMaster.deliveries != null && e.getSlot() == AuctionMaster.menusCfg.getInt("main-menu.delivery-menu-slot")) {
                         Utils.playSound(player, "delivery-menu-click");
                         new DeliveryPlayerMenu(player, true);
-                    }
-                    else if(e.getSlot()== AuctionMaster.menusCfg.getInt("main-menu.close-menu-slot")){
+                    } else if (e.getSlot() == AuctionMaster.menusCfg.getInt("main-menu.close-menu-slot")) {
                         Utils.playSound(player, "close-menu-click");
                         player.closeInventory();
                     }
@@ -132,8 +151,8 @@ public class MainAuctionMenu {
         }
 
         @EventHandler
-        public void onClose(InventoryCloseEvent e){
-            if(inventory.equals(e.getInventory())) {
+        public void onClose(InventoryCloseEvent e) {
+            if (inventory.equals(e.getInventory())) {
                 HandlerList.unregisterAll(this);
             }
         }
