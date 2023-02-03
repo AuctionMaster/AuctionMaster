@@ -3,6 +3,7 @@ package me.intel.AuctionMaster.Menus;
 import me.intel.AuctionMaster.AuctionMaster;
 import me.intel.AuctionMaster.AuctionObjects.Auction;
 import me.intel.AuctionMaster.Utils.Utils;
+import me.intel.AuctionMaster.database.MySQLDatabase;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -39,6 +40,7 @@ public class ManageOwnAuctionsMenu {
         Example: setupPage(true, pageNumber, size - 6);
      */
     private void setupPage(Boolean nextOrPrevious, Integer page, Integer slot){
+
         ArrayList<String> lore = new ArrayList<>();
 
         if (nextOrPrevious) {
@@ -88,7 +90,13 @@ public class ManageOwnAuctionsMenu {
         this.pageNumber = pageNumber;
         pageNumber -= 1;
 
+       /* AuctionMaster.auctionsHandler.ownAuctions.getOrDefault(player.getUniqueId().toString(), new ArrayList<>()).forEach(auction -> {
+            if(!AuctionMaster.auctionsHandler.auctions.values().contains(auction)|| !MySQLDatabase.oldMap.values().contains(auction))
+                auction.forceEnd();
+        });*/
+
         ArrayList<Auction> auctions = AuctionMaster.auctionsHandler.ownAuctions.getOrDefault(player.getUniqueId().toString(), new ArrayList<>());
+
 
         int normalSize = auctions.size();
         int currentAuctionListing = Math.min(normalSize, 28);
