@@ -500,15 +500,7 @@ public class MySQLDatabase implements DatabaseHandler {
                 }
                 AuctionMaster.auctionsHandler.auctions.clear();
                 newMap.keySet().forEach(s -> AuctionMaster.auctionsHandler.auctions.put(s, newMap.get(s)));
-               /* AuctionMaster.auctionsHandler.auctions.keySet().forEach(s -> {
-                    AuctionMaster.auctionsHandler.auctions.get(s).getDisplayName();
-                });
-                newMap.keySet().forEach(s -> AuctionMaster.auctionsHandler.auctions.put(s,newMap.get(s)));
-                System.out.println("DRUGI");
-                AuctionMaster.auctionsHandler.auctions.keySet().forEach(s -> {
-                    AuctionMaster.auctionsHandler.auctions.get(s).getDisplayName();
-                });
-                System.out.println("BUGA");*/
+
             } catch (Exception e) {
                 e.printStackTrace();
             }
