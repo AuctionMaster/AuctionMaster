@@ -501,6 +501,7 @@ public class MySQLDatabase implements DatabaseHandler {
                 AuctionMaster.auctionsHandler.auctions.clear();
                 newMap.keySet().forEach(s -> AuctionMaster.auctionsHandler.auctions.put(s, newMap.get(s)));
 
+
             } catch (Exception e) {
                 e.printStackTrace();
             }
