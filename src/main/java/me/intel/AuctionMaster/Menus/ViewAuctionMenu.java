@@ -425,6 +425,7 @@ public class ViewAuctionMenu {
                             if (AuctionMaster.auctionsDatabase.checkDBifBuyerClaimed(auction.getId())){
                                 player.closeInventory();
                                 player.sendMessage(Utils.chat(AuctionMaster.auctionsManagerCfg.getString("auction-is-not-available")));
+                                return;
                             }
 
 
