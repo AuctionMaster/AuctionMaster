@@ -132,6 +132,7 @@ public class MySQLDatabase implements DatabaseHandler {
                                 " displayName VARCHAR(40), " +
                                 " bids MEDIUMTEXT, " +
                                 " sellerClaimed BOOL, " +
+                                " buyerClaimed BOOL, " +
                                 " PRIMARY KEY ( id ))"
                 )
         ) {
@@ -174,10 +175,69 @@ public class MySQLDatabase implements DatabaseHandler {
         }
     }
 
+
+    public void updateWhenBuyerClaimed(String id){
+        try (
+                Connection Auctions = hikari.getConnection();
+                PreparedStatement select = Auctions.prepareStatement("UPDATE Auctions SET buyerClaimed = 1 WHERE id ='"+id+"'")
+        ) {
+           select.executeUpdate();
+
+        } catch (Exception x) {
+            AuctionMaster.plugin.getLogger().warning("There is a problem in PreviewData database!");
+            x.printStackTrace();
+        }
+    }
+
+    public boolean checkIFIsInDatabase(String id){
+        try (
+                Connection Auctions = hikari.getConnection();
+                PreparedStatement select = Auctions.prepareStatement("SELECT id FROM Auctions WHERE id ='" + id + "'")
+        ) {
+            ResultSet resultSet = select.executeQuery();
+
+            while (resultSet.next()) {
+                String isIN = resultSet.getString(1);
+                if (isIN.equals(id)) {
+                    return true;
+                }
+                return false;
+            }
+        } catch (Exception x) {
+            AuctionMaster.plugin.getLogger().warning("There is a problem in PreviewData database!");
+            x.printStackTrace();
+            return false;
+        }
+        return false;
+    }
+
+
+    public boolean checkDBifBuyerClaimed(String id) {
+        try (
+                Connection Auctions = hikari.getConnection();
+                PreparedStatement select = Auctions.prepareStatement("SELECT buyerClaimed FROM Auctions WHERE id ='" + id + "'")
+        ) {
+            ResultSet resultSet = select.executeQuery();
+
+            while (resultSet.next()) {
+                int isClaimed = resultSet.getInt(1);
+                if (isClaimed == 1) {
+                    return true;
+                }
+                return false;
+            }
+        } catch (Exception x) {
+            AuctionMaster.plugin.getLogger().warning("There is a problem in PreviewData database!");
+            x.printStackTrace();
+            return false;
+        }
+        return false;
+    }
+
     public boolean checkDBIsClaimedItem(String id) {
         try (
                 Connection Auctions = hikari.getConnection();
-                PreparedStatement select = Auctions.prepareStatement("SELECT sellerClaimed FROM Auctions WHERE id ='"+id+"'")
+                PreparedStatement select = Auctions.prepareStatement("SELECT sellerClaimed FROM Auctions WHERE id ='" + id + "'")
         ) {
             ResultSet resultSet = select.executeQuery();
 
@@ -282,7 +342,6 @@ public class MySQLDatabase implements DatabaseHandler {
     }
 
     public void removePreviewItem(String player) {
-        System.out.println("REMOVEPREVIEWITEM");
         try (
                 Connection Auctions = hikari.getConnection();
                 PreparedStatement stmt = Auctions.prepareStatement("DELETE FROM PreviewData WHERE id = ?")
@@ -301,7 +360,8 @@ public class MySQLDatabase implements DatabaseHandler {
         Bukkit.getScheduler().runTaskAsynchronously(AuctionMaster.plugin, () -> {
             try (
                     Connection Auctions = hikari.getConnection();
-                    PreparedStatement stmt = Auctions.prepareStatement("INSERT INTO Auctions VALUES (?, ?, ?, ?, ?, ?, ?, ?, '" + (auction.isBIN() ? "BIN" : "") + " 0,,, ', 0)")
+                    PreparedStatement stmt = Auctions.prepareStatement("INSERT INTO Auctions VALUES (?, ?, ?, ?, ?, ?, ?, ?, '" + (auction.isBIN() ? "BIN" : "") + " 0,,, ', 0, 0)")
+                                                                                                    //   1  2  3  4  5  6  7  8
             ) {
                 stmt.setString(1, auction.getId());
                 stmt.setDouble(2, auction.getCoins());
@@ -388,7 +448,6 @@ public class MySQLDatabase implements DatabaseHandler {
     }
 
     public boolean removeFromOwnBids(String player, String toRemove) {
-        System.out.println("REMOVEFROMOWNBIDS");
         Bukkit.getScheduler().runTaskAsynchronously(AuctionMaster.plugin, () -> {
             try (
                     Connection Auctions = hikari.getConnection();
@@ -427,7 +486,6 @@ public class MySQLDatabase implements DatabaseHandler {
     }
 
     public boolean removeFromOwnAuctions(String player, String toRemove) {
-        System.out.println("REMOVEFROMOWNAUCTIONS");
         Bukkit.getScheduler().runTaskAsynchronously(AuctionMaster.plugin, () -> {
             try (
                     Connection Auctions = hikari.getConnection();

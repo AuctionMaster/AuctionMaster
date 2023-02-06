@@ -421,6 +421,13 @@ public class ViewAuctionMenu {
 
                         Utils.playSound(player, "auction-submit-bid");
                         if(clickCase==4){
+
+                            if (AuctionMaster.auctionsDatabase.checkDBifBuyerClaimed(auction.getId())){
+                                player.closeInventory();
+                                player.sendMessage(Utils.chat(AuctionMaster.auctionsManagerCfg.getString("auction-is-not-available")));
+                            }
+
+
                             if(ownAuction || !hasCoins) {
                                 singleClick = false;
                                 return;
@@ -437,18 +444,15 @@ public class ViewAuctionMenu {
                                 if(auction.placeBid(player, bidAmount, cacheBids)) {
                                     AuctionMaster.economy.removeMoney(player, bidAmount);
                                     player.getInventory().addItem(auction.getItemStack());
+                                    AuctionMaster.auctionsDatabase.updateWhenBuyerClaimed(auction.getId());
                                 }
                                 else{
                                     player.sendMessage(AuctionMaster.utilsAPI.chat(player, AuctionMaster.bidsRelatedCfg.getString("too-late-to-open-now")));
                                 }
-                                goBack();
+                                player.closeInventory();
                             }
                         }
-                        else if(clickCase==2){
-                            auction.sellerClaim(player);
-                            goBack();
-                        }
-                        else if(clickCase==1) {
+                        else if(clickCase==2 || clickCase == 1){
                             auction.sellerClaim(player);
                             goBack();
                         }
@@ -526,7 +530,7 @@ public class ViewAuctionMenu {
                                 singleClick = false;
                                 return;
                             }
-                            if(AuctionMaster.auctionsHandler.bidAuctions.getOrDefault(player.getUniqueId().toString(), new ArrayList<>()).size()>=getMaximumBids()) {
+                            if(AuctionMaster.auctionsHandler.bidAuctions.getOrDefault(player.getUniqueId().toString(), new ArrayList<>()).size() >= getMaximumBids()) {
                                 player.sendMessage(AuctionMaster.utilsAPI.chat(player, AuctionMaster.plugin.getConfig().getString("bid-limit-reached-message")));
 
                                 singleClick = false;
@@ -567,14 +571,12 @@ public class ViewAuctionMenu {
                             goBack();
                         }
                         else if(clickCase==3){
+                            AuctionMaster.auctionsDatabase.updateWhenBuyerClaimed(auction.getId());
+
                             auction.topBidClaim(player);
                             goBack();
                         }
-                        else if (clickCase==2) {
-                            auction.sellerClaim(player);
-                            goBack();
-                        }
-                        else if (clickCase==1) {
+                        else if (clickCase== 2 || clickCase == 1) {
                             auction.sellerClaim(player);
                             goBack();
                         }

@@ -89,6 +89,7 @@ public class SQLiteDatabase implements DatabaseHandler {
                                 " displayName VARCHAR(40), " +
                                 " bids MEDIUMTEXT, " +
                                 " sellerClaimed BOOL, " +
+                                " buyerClaimed BOOL, " +
                                 " PRIMARY KEY ( id ))"
                 )
         ) {
@@ -221,6 +222,62 @@ public class SQLiteDatabase implements DatabaseHandler {
                     x.printStackTrace();
             }
         });
+    }
+    public boolean checkIFIsInDatabase(String id){
+        try (
+                Connection Auctions = DriverManager.getConnection(url);
+                PreparedStatement select = Auctions.prepareStatement("SELECT id FROM Auctions WHERE id ='" + id + "'")
+        ) {
+            ResultSet resultSet = select.executeQuery();
+
+            while (resultSet.next()) {
+                String isIN = resultSet.getString(1);
+                if (isIN.equals(id)) {
+                    return true;
+                }
+                return false;
+            }
+        } catch (Exception x) {
+            AuctionMaster.plugin.getLogger().warning("There is a problem in PreviewData database!");
+            x.printStackTrace();
+            return false;
+        }
+        return false;
+    }
+    public void updateWhenBuyerClaimed(String id){
+        try (
+                Connection Auctions = DriverManager.getConnection(url);
+                PreparedStatement select = Auctions.prepareStatement("UPDATE Auctions SET buyerClaimed = 1 WHERE id ='"+id+"'")
+                //  UPDATE Auctions SET buyerClaimed = 1 WHERE id ='237ecfc6-aa6b-4c13-9344-e7216213eff7'
+        ) {
+            select.executeQuery();
+
+        } catch (Exception x) {
+            AuctionMaster.plugin.getLogger().warning("There is a problem in PreviewData database!");
+            x.printStackTrace();
+        }
+    }
+
+    public boolean checkDBifBuyerClaimed(String id) {
+        try (
+                Connection Auctions = DriverManager.getConnection(url);
+                PreparedStatement select = Auctions.prepareStatement("SELECT buyerClaimed FROM Auctions WHERE id ='" + id + "'")
+        ) {
+            ResultSet resultSet = select.executeQuery();
+
+            while (resultSet.next()) {
+                int isClaimed = resultSet.getInt(1);
+                if (isClaimed == 1) {
+                    return true;
+                }
+                return false;
+            }
+        } catch (Exception x) {
+            AuctionMaster.plugin.getLogger().warning("There is a problem in PreviewData database!");
+            x.printStackTrace();
+            return false;
+        }
+        return false;
     }
     public boolean checkDBIsClaimedItem(String id) {
         try (

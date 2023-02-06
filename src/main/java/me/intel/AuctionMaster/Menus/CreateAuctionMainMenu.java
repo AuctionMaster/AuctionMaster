@@ -318,7 +318,6 @@ public class CreateAuctionMainMenu {
                         player.sendMessage(AuctionMaster.utilsAPI.chat(player, AuctionMaster.plugin.getConfig().getString("blacklist-item-message")));
                         return;
                     }
-                    System.out.println("(1) Zapisuje item do menu!");
                     AuctionPreviewItemEvent event = new AuctionPreviewItemEvent(player, e.getCurrentItem());
                     Bukkit.getPluginManager().callEvent(event);
                     if (event.isCancelled())
