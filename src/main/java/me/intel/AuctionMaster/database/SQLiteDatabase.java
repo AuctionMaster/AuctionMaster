@@ -9,6 +9,9 @@ import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
 import java.sql.*;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -222,6 +225,77 @@ public class SQLiteDatabase implements DatabaseHandler {
                     x.printStackTrace();
             }
         });
+    }
+    //public void insertLogs(Auction auction, Player player, String claimed) { //Unused for now
+    //    Bukkit.getScheduler().runTaskAsynchronously(AuctionMaster.plugin, () -> {
+    //        try (
+    //                Connection Auctions = DriverManager.getConnection(url);
+    //                PreparedStatement stmt = Auctions.prepareStatement("INSERT INTO Logs VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ? )")
+    //        ) {
+    //            stmt.setString(1, player.getName());
+    //            stmt.setString(2, player.getUniqueId().toString());
+    //            stmt.setString(3, auction.getSellerName());
+    //            stmt.setString(4, auction.getSellerUUID());
+    //            stmt.setString(5, auction.getDisplayName());
+    //            stmt.setString(6, String.valueOf(auction.getCoins()));
+    //            stmt.setString(7, LocalDateTime.ofInstant(Instant.now(), ZoneId.systemDefault()).toString());
+    //            if (auction.isBIN()) {
+    //                stmt.setString(8, "BIN");
+    //            } else {
+    //                stmt.setString(8, "BID");
+    //            }
+    //            stmt.setString(9, null);
+    //            stmt.setString(10, null);
+    //            try {
+    //                Double.valueOf(claimed);
+    //                stmt.setString(10, claimed);
+    //            } catch (Exception e) {
+    //                stmt.setString(9, claimed);
+    //            }
+    //            stmt.setString(11, auction.getId());
+    //            stmt.executeUpdate();
+    //        } catch (Exception x) {
+    //            if (x.getMessage().startsWith("[SQLITE_BUSY]"))
+    //                Bukkit.getScheduler().runTaskLaterAsynchronously(AuctionMaster.plugin, () -> insertAuction(auction), 7);
+    //            else
+    //                x.printStackTrace();
+    //        }
+    //    });
+    //}
+    public boolean checkDBNameAndifClaimed(String id, String name) {
+        try (
+                Connection Auctions = DriverManager.getConnection(url);
+                PreparedStatement select = Auctions.prepareStatement("SELECT buyerClaimed, buyerName FROM Auctions WHERE id ='" + id + "'")
+        ) {
+            ResultSet resultSet = select.executeQuery();
+
+            while (resultSet.next()) {
+                String buyerName = resultSet.getString(2);
+                int isClaimed = resultSet.getInt(1);
+                if (isClaimed == 1 && name.equals(buyerName)) {
+                    return true;
+                }
+                return false;
+            }
+        } catch (Exception x) {
+            AuctionMaster.plugin.getLogger().warning("There is a problem in PreviewData database!");
+            x.printStackTrace();
+            return false;
+        }
+        return false;
+    }
+
+    public void updateWhenBuyerBought(String id, String name){
+        try (
+                Connection Auctions = DriverManager.getConnection(url);
+                PreparedStatement select = Auctions.prepareStatement("UPDATE Auctions SET buyerClaimed = 1 , buyerName = '"+name+"' WHERE id ='"+id+"'")
+        ) {
+            select.executeUpdate();
+
+        } catch (Exception x) {
+            AuctionMaster.plugin.getLogger().warning("There is a problem in PreviewData database!");
+            x.printStackTrace();
+        }
     }
     public boolean checkIFIsInDatabase(String id){
         try (

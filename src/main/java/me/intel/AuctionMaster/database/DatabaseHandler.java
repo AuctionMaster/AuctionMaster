@@ -9,7 +9,10 @@ public interface DatabaseHandler {
     void deletePreviewItems(String id);
     void registerPreviewItem(String player, String item);
     void removePreviewItem(String player);
+    //void insertLogs(Auction auction, Player player, String claimed);
     void updateWhenBuyerClaimed(String id);
+    boolean checkDBNameAndifClaimed(String id, String name);
+    void updateWhenBuyerBought(String id, String name);
     boolean checkIFIsInDatabase(String id);
     boolean checkDBifBuyerClaimed(String player);
     boolean checkDBPreviewItems(Player player);

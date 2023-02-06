@@ -172,6 +172,7 @@ public class AuctionBIN implements Auction{
             Utils.playSound(player, "claim-item");
         }
         else {
+
             SellerClaimEndedAuctionEvent event = new SellerClaimEndedAuctionEvent(player, this, this.coins);
             Bukkit.getPluginManager().callEvent(event);
             if (event.isCancelled()) {

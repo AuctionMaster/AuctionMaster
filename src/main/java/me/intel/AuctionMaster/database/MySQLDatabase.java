@@ -3,21 +3,19 @@ package me.intel.AuctionMaster.database;
 import me.intel.AuctionMaster.AuctionObjects.Auction;
 import me.intel.AuctionMaster.AuctionObjects.AuctionBIN;
 import me.intel.AuctionMaster.AuctionObjects.AuctionClassic;
-import me.intel.AuctionMaster.AuctionObjects.Categories.Others;
 import me.intel.AuctionMaster.Utils.Utils;
 import me.intel.AuctionMaster.AuctionMaster;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.ConfigurationSection;
 
 import java.sql.*;
-import java.time.ZonedDateTime;
+import java.time.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
 import com.zaxxer.hikari.HikariDataSource;
 import org.bukkit.entity.Player;
-import org.bukkit.inventory.ItemStack;
 
 public class MySQLDatabase implements DatabaseHandler {
     private HikariDataSource hikari;
@@ -133,6 +131,7 @@ public class MySQLDatabase implements DatabaseHandler {
                                 " bids MEDIUMTEXT, " +
                                 " sellerClaimed BOOL, " +
                                 " buyerClaimed BOOL, " +
+                                " buyerName BOOL VARCHAR(16), " +
                                 " PRIMARY KEY ( id ))"
                 )
         ) {
@@ -175,13 +174,36 @@ public class MySQLDatabase implements DatabaseHandler {
         }
     }
 
-
-    public void updateWhenBuyerClaimed(String id){
+    public boolean checkDBNameAndifClaimed(String id, String name) {
         try (
                 Connection Auctions = hikari.getConnection();
-                PreparedStatement select = Auctions.prepareStatement("UPDATE Auctions SET buyerClaimed = 1 WHERE id ='"+id+"'")
+                PreparedStatement select = Auctions.prepareStatement("SELECT buyerClaimed, buyerName FROM Auctions WHERE id ='" + id + "'")
         ) {
-           select.executeUpdate();
+            ResultSet resultSet = select.executeQuery();
+
+            while (resultSet.next()) {
+                String buyerName = resultSet.getString(2);
+                int isClaimed = resultSet.getInt(1);
+                if (isClaimed == 1 && name.equals(buyerName)) {
+
+                    return true;
+                }
+                return false;
+            }
+        } catch (Exception x) {
+            AuctionMaster.plugin.getLogger().warning("There is a problem in PreviewData database!");
+            x.printStackTrace();
+            return false;
+        }
+        return false;
+    }
+
+    public void updateWhenBuyerBought(String id, String name) {
+        try (
+                Connection Auctions = hikari.getConnection();
+                PreparedStatement select = Auctions.prepareStatement("UPDATE Auctions SET buyerClaimed = 1 , buyerName = '" + name + "' WHERE id ='" + id + "'")
+        ) {
+            select.executeUpdate();
 
         } catch (Exception x) {
             AuctionMaster.plugin.getLogger().warning("There is a problem in PreviewData database!");
@@ -189,7 +211,20 @@ public class MySQLDatabase implements DatabaseHandler {
         }
     }
 
-    public boolean checkIFIsInDatabase(String id){
+    public void updateWhenBuyerClaimed(String id) {
+        try (
+                Connection Auctions = hikari.getConnection();
+                PreparedStatement select = Auctions.prepareStatement("UPDATE Auctions SET buyerClaimed = 1 WHERE id ='" + id + "'")
+        ) {
+            select.executeUpdate();
+
+        } catch (Exception x) {
+            AuctionMaster.plugin.getLogger().warning("There is a problem in PreviewData database!");
+            x.printStackTrace();
+        }
+    }
+
+    public boolean checkIFIsInDatabase(String id) {
         try (
                 Connection Auctions = hikari.getConnection();
                 PreparedStatement select = Auctions.prepareStatement("SELECT id FROM Auctions WHERE id ='" + id + "'")
@@ -356,12 +391,51 @@ public class MySQLDatabase implements DatabaseHandler {
         }
     }
 
+
+    //public void insertLogs(Auction auction, Player player, String claimed) {  //Unused for now
+    //    Bukkit.getScheduler().runTaskAsynchronously(AuctionMaster.plugin, () -> {
+    //        try (
+    //                Connection Auctions = hikari.getConnection();
+    //                PreparedStatement stmt = Auctions.prepareStatement("INSERT INTO Logs VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ? )")
+    //        ) {
+    //            stmt.setString(1, player.getName());
+    //            stmt.setString(2, player.getUniqueId().toString());
+    //            stmt.setString(3, auction.getSellerName());
+    //            stmt.setString(4, auction.getSellerUUID());
+    //            stmt.setString(5, auction.getDisplayName());
+    //            stmt.setString(6, String.valueOf(auction.getCoins()));
+    //            stmt.setString(7, LocalDateTime.ofInstant(Instant.now(), ZoneId.systemDefault()).toString());
+    //            if (auction.isBIN()) {
+    //                stmt.setString(8, "BIN");
+    //            } else {
+    //                stmt.setString(8, "BID");
+    //            }
+    //            stmt.setString(9, null);
+    //            stmt.setString(10, null);
+    //            try {
+    //                Double.valueOf(claimed);
+    //                stmt.setString(10, claimed);
+    //            } catch (Exception e) {
+    //                e.printStackTrace();
+    //                stmt.setString(9, claimed);
+    //            }
+    //            stmt.setString(11, auction.getId());
+    //            stmt.executeUpdate();
+    //        } catch (Exception x) {
+    //            if (x.getMessage().startsWith("[SQLITE_BUSY]"))
+    //                Bukkit.getScheduler().runTaskLaterAsynchronously(AuctionMaster.plugin, () -> insertAuction(auction), 7);
+    //            else
+    //                x.printStackTrace();
+    //        }
+    //    });
+    //}
+
     public void insertAuction(Auction auction) {
         Bukkit.getScheduler().runTaskAsynchronously(AuctionMaster.plugin, () -> {
             try (
                     Connection Auctions = hikari.getConnection();
-                    PreparedStatement stmt = Auctions.prepareStatement("INSERT INTO Auctions VALUES (?, ?, ?, ?, ?, ?, ?, ?, '" + (auction.isBIN() ? "BIN" : "") + " 0,,, ', 0, 0)")
-                                                                                                    //   1  2  3  4  5  6  7  8
+                    PreparedStatement stmt = Auctions.prepareStatement("INSERT INTO Auctions VALUES (?, ?, ?, ?, ?, ?, ?, ?, '" + (auction.isBIN() ? "BIN" : "") + " 0,,, ', 0, 0, " + null + ")")
+                    //   1  2  3  4  5  6  7  8
             ) {
                 stmt.setString(1, auction.getId());
                 stmt.setDouble(2, auction.getCoins());
