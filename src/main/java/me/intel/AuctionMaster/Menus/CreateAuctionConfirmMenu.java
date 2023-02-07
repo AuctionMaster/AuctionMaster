@@ -94,6 +94,7 @@ public class CreateAuctionConfirmMenu {
 
                     Utils.playSound(player, "auction-confirm");
                     AuctionMaster.economy.removeMoney(player, fee);
+                    AuctionMaster.auctionsDatabase.deletePreviewItems(uuid);
                     AuctionMaster.auctionsHandler.previewItems.remove(uuid);
                     AuctionMaster.auctionsDatabase.removePreviewItem(uuid);
                     AuctionMaster.auctionsHandler.startingDuration.remove(uuid);

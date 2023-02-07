@@ -56,6 +56,7 @@ auction-item-lore:
     - ''
     - '&eClick to inspect!'
 
+auction-is-not-available: 'Someone already bought this item!'
 sort-auction-item: '154'
 sort-auction-item-name: '&aSort'
 #The lore is dynamic so you can only edit

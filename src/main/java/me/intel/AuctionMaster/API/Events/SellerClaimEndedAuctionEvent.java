@@ -24,7 +24,11 @@ public class SellerClaimEndedAuctionEvent extends Event implements Cancellable  
         ConfigurationSection auctionc = AuctionMaster.plugin.getConfig().getConfigurationSection("events").getConfigurationSection("ClaimEnded");
         if(auctionc.getBoolean("Enabled")) {
             String message = auctionc.getString("Message");
-            Utils.sendWebhook(message.replace("%player%",player.getName()).replace("%item%", (auction.getItemStack().getItemMeta().hasDisplayName() ? ChatColor.stripColor(auction.getItemStack().getItemMeta().getDisplayName()) : auction.getItemStack().getType().name())).replace("%price%", String.valueOf(auction.getCoins())));
+            Utils.sendWebhook(message.replace("%player%",player.getName()).replace("%item%", (auction.getItemStack().getItemMeta().hasDisplayName()
+                    ?
+                    ChatColor.stripColor(auction.getItemStack().getItemMeta().getDisplayName())
+                    :
+                    auction.getItemStack().getType().name())).replace("%price%", String.valueOf(auction.getCoins())));
         }
     }
 

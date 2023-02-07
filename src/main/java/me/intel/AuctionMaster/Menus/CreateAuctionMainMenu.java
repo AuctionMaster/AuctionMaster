@@ -4,6 +4,7 @@ import me.intel.AuctionMaster.API.Events.AuctionPreviewItemEvent;
 import me.intel.AuctionMaster.AuctionMaster;
 import me.intel.AuctionMaster.InputGUIs.StartingBidGUI.StartingBidGUI;
 import me.intel.AuctionMaster.Utils.Utils;
+import me.intel.AuctionMaster.database.MySQLDatabase;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
@@ -18,6 +19,9 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.permissions.PermissionAttachmentInfo;
 
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.*;
 
@@ -219,10 +223,12 @@ public class CreateAuctionMainMenu {
     }
 
     boolean buyItNow;
-
     public CreateAuctionMainMenu(Player player) {
         Bukkit.getScheduler().runTaskAsynchronously(AuctionMaster.plugin, () -> {
             this.player = player;
+            if (!AuctionMaster.auctionsDatabase.checkDBPreviewItems(player)){
+                AuctionMaster.auctionsHandler.previewItems.remove(player.getUniqueId().toString());
+            }
             inventory = Bukkit.createInventory(player, AuctionMaster.configLoad.createAuctionMenuSize,
                     AuctionMaster.utilsAPI.chat(player,
                             AuctionMaster.configLoad.createAuctionMenuName));
@@ -237,7 +243,6 @@ public class CreateAuctionMainMenu {
                                     !AuctionMaster.auctionsHandler.buyItNowSelected.contains(player.getUniqueId().toString()))
                                     ||
                                     (!AuctionMaster.configLoad.defaultBuyItNow && AuctionMaster.auctionsHandler.buyItNowSelected.contains(player.getUniqueId().toString()))));
-
             if (AuctionMaster.configLoad.useBackgoundGlass)
                 for (int i = 0; i < AuctionMaster.configLoad.createAuctionMenuSize; i++)
                     inventory.setItem(i, AuctionMaster.configLoad.backgroundGlass.clone());
@@ -246,6 +251,7 @@ public class CreateAuctionMainMenu {
             for (String line : AuctionMaster.configLoad.createAuctionPreviewLoreNoItem)
                 lore.add(AuctionMaster.utilsAPI.chat(player, line));
             previewItem = AuctionMaster.itemConstructor.getItem(AuctionMaster.configLoad.createAuctionPreviewMaterial, AuctionMaster.utilsAPI.chat(player, AuctionMaster.configLoad.createAuctionPreviewNameNoItem), lore);
+
             if (AuctionMaster.auctionsHandler.previewItems.containsKey(player.getUniqueId().toString())) {
                 inventory.setItem(previewSlot = AuctionMaster.menusCfg.getInt("create-auction-menu.preview-item-slot"), transformToPreview(AuctionMaster.auctionsHandler.previewItems.get(player.getUniqueId().toString())));
             } else {
@@ -312,7 +318,6 @@ public class CreateAuctionMainMenu {
                         player.sendMessage(AuctionMaster.utilsAPI.chat(player, AuctionMaster.plugin.getConfig().getString("blacklist-item-message")));
                         return;
                     }
-
                     AuctionPreviewItemEvent event = new AuctionPreviewItemEvent(player, e.getCurrentItem());
                     Bukkit.getPluginManager().callEvent(event);
                     if (event.isCancelled())

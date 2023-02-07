@@ -30,25 +30,25 @@ public class ManageOwnAuctionsMenu {
     private int goBackSlot;
     private int goNextSlot;
     private int pageNumber;
-    private int collectAllSlot=-1;
+    private int collectAllSlot = -1;
 
-    private final ArrayList<Auction> toCollectAll=new ArrayList<>();
+    private final ArrayList<Auction> toCollectAll = new ArrayList<>();
 
     /*
         Creates the previous/next page buttons.
 
         Example: setupPage(true, pageNumber, size - 6);
      */
-    private void setupPage(Boolean nextOrPrevious, Integer page, Integer slot){
+    private void setupPage(Boolean nextOrPrevious, Integer page, Integer slot) {
 
         ArrayList<String> lore = new ArrayList<>();
 
         if (nextOrPrevious) {
-            for(String line : AuctionMaster.configLoad.nextPageLore)
-                lore.add(AuctionMaster.utilsAPI.chat(player, line.replace("%page-number%", String.valueOf(page+2))));
+            for (String line : AuctionMaster.configLoad.nextPageLore)
+                lore.add(AuctionMaster.utilsAPI.chat(player, line.replace("%page-number%", String.valueOf(page + 2))));
             inventory.setItem(goNextSlot = slot, AuctionMaster.itemConstructor.getItem(AuctionMaster.configLoad.nextPageMaterial, AuctionMaster.utilsAPI.chat(player, AuctionMaster.configLoad.nextPageName.replace("%page-number%", String.valueOf(page + 2))), lore));
         } else {
-            for(String line : AuctionMaster.configLoad.previousPageLore)
+            for (String line : AuctionMaster.configLoad.previousPageLore)
                 lore.add(AuctionMaster.utilsAPI.chat(player, line.replace("%page-number%", String.valueOf(page))));
             inventory.setItem(goBackSlot = slot, AuctionMaster.itemConstructor.getItem(AuctionMaster.configLoad.previousPageMaterial, AuctionMaster.utilsAPI.chat(player, AuctionMaster.configLoad.previousPageName.replace("%page-number%", String.valueOf(page))), lore));
         }
@@ -72,8 +72,8 @@ public class ManageOwnAuctionsMenu {
         return true;
     }
 
-    private void keepUpdated(){
-        keepUpdated=Bukkit.getScheduler().runTaskTimerAsynchronously(AuctionMaster.plugin, () -> {
+    private void keepUpdated() {
+        keepUpdated = Bukkit.getScheduler().runTaskTimerAsynchronously(AuctionMaster.plugin, () -> {
             for (Map.Entry<Integer, Auction> entry : auctions.entrySet()) {
                 try {
                     inventory.setItem(entry.getKey(), entry.getValue().getUpdatedDisplay());
@@ -89,11 +89,6 @@ public class ManageOwnAuctionsMenu {
         this.player = player;
         this.pageNumber = pageNumber;
         pageNumber -= 1;
-
-       /* AuctionMaster.auctionsHandler.ownAuctions.getOrDefault(player.getUniqueId().toString(), new ArrayList<>()).forEach(auction -> {
-            if(!AuctionMaster.auctionsHandler.auctions.values().contains(auction)|| !MySQLDatabase.oldMap.values().contains(auction))
-                auction.forceEnd();
-        });*/
 
         ArrayList<Auction> auctions = AuctionMaster.auctionsHandler.ownAuctions.getOrDefault(player.getUniqueId().toString(), new ArrayList<>());
 
@@ -123,7 +118,7 @@ public class ManageOwnAuctionsMenu {
         for (Auction auction : auctions) {
             i++;
 
-            if (i <= pageNumber*28)
+            if (i <= pageNumber * 28)
                 continue;
             else if (slot > 43)
                 break;
@@ -152,7 +147,7 @@ public class ManageOwnAuctionsMenu {
         else
             setupPage(false, pageNumber, size - 6);
 
-        if (normalSize > currentAuctionListing*(pageNumber+1))
+        if (normalSize > currentAuctionListing * (pageNumber + 1))
             setupPage(true, pageNumber, size - 4);
 
         if (toCollectAll.size() > 1) {
@@ -184,25 +179,23 @@ public class ManageOwnAuctionsMenu {
         private Boolean singleClick = false;
 
         @EventHandler
-        public void onClick(InventoryClickEvent e){
-            if(e.getInventory().equals(inventory)){
+        public void onClick(InventoryClickEvent e) {
+            if (e.getInventory().equals(inventory)) {
                 e.setCancelled(true);
-                if(e.getCurrentItem()==null || e.getCurrentItem().getType().equals(Material.AIR)) {
+                if (e.getCurrentItem() == null || e.getCurrentItem().getType().equals(Material.AIR)) {
                     return;
                 }
-                if(e.getClickedInventory().equals(inventory)) {
+                if (e.getClickedInventory().equals(inventory)) {
                     if (e.getSlot() == createMenuSlot)
                         new CreateAuctionMainMenu(player);
-                    else if(e.getSlot()==collectAllSlot){
+                    else if (e.getSlot() == collectAllSlot) {
                         if (singleClick)
                             return;
                         singleClick = true;
 
                         Utils.playSound(player, "claim-all-click");
                         singleClick = collectAll();
-                    }
-
-                    else if (e.getSlot() == goBackSlot) {
+                    } else if (e.getSlot() == goBackSlot) {
                         if (pageNumber == 1) {
                             Utils.playSound(player, "go-back-click");
                             new MainAuctionMenu(player);
@@ -213,8 +206,7 @@ public class ManageOwnAuctionsMenu {
                     } else if (e.getSlot() == goNextSlot) {
                         Utils.playSound(player, "next-page-click");
                         new ManageOwnAuctionsMenu(player, pageNumber + 1);
-                    }
-                    else if (auctions.containsKey(e.getSlot())){
+                    } else if (auctions.containsKey(e.getSlot())) {
                         if (singleClick)
                             return;
                         singleClick = true;
@@ -226,9 +218,9 @@ public class ManageOwnAuctionsMenu {
         }
 
         @EventHandler
-        public void onClose(InventoryCloseEvent e){
+        public void onClose(InventoryCloseEvent e) {
             if (inventory.equals(e.getInventory())) {
-                if (keepUpdated!=null) {
+                if (keepUpdated != null) {
                     keepUpdated.cancel();
                 }
                 HandlerList.unregisterAll(this);

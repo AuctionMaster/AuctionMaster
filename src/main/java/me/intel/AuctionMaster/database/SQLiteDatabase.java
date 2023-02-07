@@ -6,14 +6,19 @@ import me.intel.AuctionMaster.AuctionObjects.AuctionClassic;
 import me.intel.AuctionMaster.Utils.Utils;
 import me.intel.AuctionMaster.AuctionMaster;
 import org.bukkit.Bukkit;
+import org.bukkit.entity.Player;
 
 import java.sql.*;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
 public class SQLiteDatabase implements DatabaseHandler {
+
     private Connection connection;
     private final String url;
 
@@ -86,7 +91,8 @@ public class SQLiteDatabase implements DatabaseHandler {
                                 " item MEDIUMTEXT, " +
                                 " displayName VARCHAR(40), " +
                                 " bids MEDIUMTEXT, " +
-                                " sellerClaimed BOOL, "+
+                                " sellerClaimed BOOL, " +
+                                " buyerClaimed BOOL, " +
                                 " PRIMARY KEY ( id ))"
                 )
         ) {
@@ -199,7 +205,7 @@ public class SQLiteDatabase implements DatabaseHandler {
         });
     }
 
-    public void removePreviewItem(String player){
+    public void removePreviewItem(String player) {
         Bukkit.getScheduler().runTaskAsynchronously(AuctionMaster.plugin, () -> {
             try (
                     Connection Auctions = DriverManager.getConnection(url);
@@ -220,13 +226,178 @@ public class SQLiteDatabase implements DatabaseHandler {
             }
         });
     }
+    //public void insertLogs(Auction auction, Player player, String claimed) { //Unused for now
+    //    Bukkit.getScheduler().runTaskAsynchronously(AuctionMaster.plugin, () -> {
+    //        try (
+    //                Connection Auctions = DriverManager.getConnection(url);
+    //                PreparedStatement stmt = Auctions.prepareStatement("INSERT INTO Logs VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ? )")
+    //        ) {
+    //            stmt.setString(1, player.getName());
+    //            stmt.setString(2, player.getUniqueId().toString());
+    //            stmt.setString(3, auction.getSellerName());
+    //            stmt.setString(4, auction.getSellerUUID());
+    //            stmt.setString(5, auction.getDisplayName());
+    //            stmt.setString(6, String.valueOf(auction.getCoins()));
+    //            stmt.setString(7, LocalDateTime.ofInstant(Instant.now(), ZoneId.systemDefault()).toString());
+    //            if (auction.isBIN()) {
+    //                stmt.setString(8, "BIN");
+    //            } else {
+    //                stmt.setString(8, "BID");
+    //            }
+    //            stmt.setString(9, null);
+    //            stmt.setString(10, null);
+    //            try {
+    //                Double.valueOf(claimed);
+    //                stmt.setString(10, claimed);
+    //            } catch (Exception e) {
+    //                stmt.setString(9, claimed);
+    //            }
+    //            stmt.setString(11, auction.getId());
+    //            stmt.executeUpdate();
+    //        } catch (Exception x) {
+    //            if (x.getMessage().startsWith("[SQLITE_BUSY]"))
+    //                Bukkit.getScheduler().runTaskLaterAsynchronously(AuctionMaster.plugin, () -> insertAuction(auction), 7);
+    //            else
+    //                x.printStackTrace();
+    //        }
+    //    });
+    //}
+    public boolean checkDBNameAndifClaimed(String id, String name) {
+        try (
+                Connection Auctions = DriverManager.getConnection(url);
+                PreparedStatement select = Auctions.prepareStatement("SELECT buyerClaimed, buyerName FROM Auctions WHERE id ='" + id + "'")
+        ) {
+            ResultSet resultSet = select.executeQuery();
 
-    public void insertAuction(Auction auction){
+            while (resultSet.next()) {
+                String buyerName = resultSet.getString(2);
+                int isClaimed = resultSet.getInt(1);
+                if (isClaimed == 1 && name.equals(buyerName)) {
+                    return true;
+                }
+                return false;
+            }
+        } catch (Exception x) {
+            AuctionMaster.plugin.getLogger().warning("There is a problem in PreviewData database!");
+            x.printStackTrace();
+            return false;
+        }
+        return false;
+    }
+
+    public void updateWhenBuyerBought(String id, String name){
+        try (
+                Connection Auctions = DriverManager.getConnection(url);
+                PreparedStatement select = Auctions.prepareStatement("UPDATE Auctions SET buyerClaimed = 1 , buyerName = '"+name+"' WHERE id ='"+id+"'")
+        ) {
+            select.executeUpdate();
+
+        } catch (Exception x) {
+            AuctionMaster.plugin.getLogger().warning("There is a problem in PreviewData database!");
+            x.printStackTrace();
+        }
+    }
+    public boolean checkIFIsInDatabase(String id){
+        try (
+                Connection Auctions = DriverManager.getConnection(url);
+                PreparedStatement select = Auctions.prepareStatement("SELECT id FROM Auctions WHERE id ='" + id + "'")
+        ) {
+            ResultSet resultSet = select.executeQuery();
+
+            while (resultSet.next()) {
+                String isIN = resultSet.getString(1);
+                if (isIN.equals(id)) {
+                    return true;
+                }
+                return false;
+            }
+        } catch (Exception x) {
+            AuctionMaster.plugin.getLogger().warning("There is a problem in PreviewData database!");
+            x.printStackTrace();
+            return false;
+        }
+        return false;
+    }
+    public void updateWhenBuyerClaimed(String id){
+        try (
+                Connection Auctions = DriverManager.getConnection(url);
+                PreparedStatement select = Auctions.prepareStatement("UPDATE Auctions SET buyerClaimed = 1 WHERE id ='"+id+"'")
+                //  UPDATE Auctions SET buyerClaimed = 1 WHERE id ='237ecfc6-aa6b-4c13-9344-e7216213eff7'
+        ) {
+            select.executeQuery();
+
+        } catch (Exception x) {
+            AuctionMaster.plugin.getLogger().warning("There is a problem in PreviewData database!");
+            x.printStackTrace();
+        }
+    }
+
+    public boolean checkDBifBuyerClaimed(String id) {
+        try (
+                Connection Auctions = DriverManager.getConnection(url);
+                PreparedStatement select = Auctions.prepareStatement("SELECT buyerClaimed FROM Auctions WHERE id ='" + id + "'")
+        ) {
+            ResultSet resultSet = select.executeQuery();
+
+            while (resultSet.next()) {
+                int isClaimed = resultSet.getInt(1);
+                if (isClaimed == 1) {
+                    return true;
+                }
+                return false;
+            }
+        } catch (Exception x) {
+            AuctionMaster.plugin.getLogger().warning("There is a problem in PreviewData database!");
+            x.printStackTrace();
+            return false;
+        }
+        return false;
+    }
+    public boolean checkDBIsClaimedItem(String id) {
+        try (
+                Connection Auctions = DriverManager.getConnection(url);
+                PreparedStatement select = Auctions.prepareStatement("SELECT sellerClaimed FROM Auctions WHERE id ='"+id+"'")
+        ) {
+            ResultSet resultSet = select.executeQuery();
+
+            while (resultSet.next()) {
+                int isClaimed = resultSet.getInt(1);
+                if (isClaimed == 1) {
+                    return true;
+                }
+                return false;
+            }
+        } catch (Exception x) {
+            AuctionMaster.plugin.getLogger().warning("There is a problem in PreviewData database!");
+            x.printStackTrace();
+            return false;
+        }
+        return false;
+    }
+    public boolean checkDBPreviewItems(Player player) {
+        try (
+                Connection Auctions = DriverManager.getConnection(url);
+                PreparedStatement select = Auctions.prepareStatement("SELECT * FROM PreviewData WHERE id ='" + player.getUniqueId() + "'")
+        ) {
+            ResultSet resultSet = select.executeQuery();
+
+            while (resultSet.next()) {
+                return true;
+            }
+        } catch (Exception x) {
+            AuctionMaster.plugin.getLogger().warning("There is a problem in PreviewData database!");
+            x.printStackTrace();
+            return false;
+        }
+        return false;
+    }
+
+    public void insertAuction(Auction auction) {
         Bukkit.getScheduler().runTaskAsynchronously(AuctionMaster.plugin, () -> {
-            try(
+            try (
                     Connection Auctions = DriverManager.getConnection(url);
-                    PreparedStatement stmt = Auctions.prepareStatement("INSERT INTO Auctions VALUES (?, ?, ?, ?, ?, ?, ?, ?, '"+(auction.isBIN()?"BIN":"")+" 0,,, ', 0)")
-            ){
+                    PreparedStatement stmt = Auctions.prepareStatement("INSERT INTO Auctions VALUES (?, ?, ?, ?, ?, ?, ?, ?, '" + (auction.isBIN() ? "BIN" : "") + " 0,,, ', 0)")
+            ) {
                 stmt.setString(1, auction.getId());
                 stmt.setDouble(2, auction.getCoins());
                 stmt.setLong(3, auction.getEndingDate());
@@ -236,7 +407,7 @@ public class SQLiteDatabase implements DatabaseHandler {
                 stmt.setString(7, Utils.itemToBase64(auction.getItemStack()));
                 stmt.setString(8, auction.getDisplayName());
                 stmt.executeUpdate();
-            }catch(Exception x){
+            } catch (Exception x) {
                 if (x.getMessage().startsWith("[SQLITE_BUSY]"))
                     Bukkit.getScheduler().runTaskLaterAsynchronously(AuctionMaster.plugin, () -> insertAuction(auction), 7);
                 else
@@ -245,21 +416,21 @@ public class SQLiteDatabase implements DatabaseHandler {
         });
     }
 
-    public void updateAuctionField(String id, HashMap<String, String> toUpdate){
+    public void updateAuctionField(String id, HashMap<String, String> toUpdate) {
         Bukkit.getScheduler().runTaskAsynchronously(AuctionMaster.plugin, () -> {
             String toSet = "";
-            for(Map.Entry<String, String> entry : toUpdate.entrySet())
-                toSet=toSet.concat(","+entry.getKey()+"="+entry.getValue());
+            for (Map.Entry<String, String> entry : toUpdate.entrySet())
+                toSet = toSet.concat("," + entry.getKey() + "=" + entry.getValue());
 
-            toSet=toSet.substring(1);
-            try(
+            toSet = toSet.substring(1);
+            try (
                     Connection Auctions = DriverManager.getConnection(url);
-                    PreparedStatement stmt = Auctions.prepareStatement("UPDATE Auctions SET "+toSet+" WHERE id = ?")
-            ){
+                    PreparedStatement stmt = Auctions.prepareStatement("UPDATE Auctions SET " + toSet + " WHERE id = ?")
+            ) {
                 stmt.setString(1, id);
                 stmt.executeUpdate();
-            }catch(Exception x){
-                if(x.getMessage().startsWith("[SQLITE_BUSY]"))
+            } catch (Exception x) {
+                if (x.getMessage().startsWith("[SQLITE_BUSY]"))
                     Bukkit.getScheduler().runTaskLaterAsynchronously(AuctionMaster.plugin, () -> updateAuctionField(id, toUpdate), 7);
                 else
                     x.printStackTrace();
@@ -268,7 +439,7 @@ public class SQLiteDatabase implements DatabaseHandler {
         });
     }
 
-    public boolean deleteAuction(String id){
+    public boolean deleteAuction(String id) {
         Bukkit.getScheduler().runTaskAsynchronously(AuctionMaster.plugin, () -> {
             try (
                     Connection Auctions = DriverManager.getConnection(url);
@@ -287,7 +458,7 @@ public class SQLiteDatabase implements DatabaseHandler {
         return true;
     }
 
-    public void addToOwnBids(String player, String toAdd){
+    public void addToOwnBids(String player, String toAdd) {
         Bukkit.getScheduler().runTaskAsynchronously(AuctionMaster.plugin, () -> {
             try (
                     Connection Auctions = DriverManager.getConnection(url);
@@ -310,7 +481,7 @@ public class SQLiteDatabase implements DatabaseHandler {
         });
     }
 
-    public boolean removeFromOwnBids(String player, String toRemove){
+    public boolean removeFromOwnBids(String player, String toRemove) {
         Bukkit.getScheduler().runTaskAsynchronously(AuctionMaster.plugin, () -> {
             try (
                     Connection Auctions = DriverManager.getConnection(url);
@@ -329,7 +500,7 @@ public class SQLiteDatabase implements DatabaseHandler {
         return true;
     }
 
-    public void resetOwnBids(String player){
+    public void resetOwnBids(String player) {
         Bukkit.getScheduler().runTaskAsynchronously(AuctionMaster.plugin, () -> {
             try (
                     Connection Auctions = DriverManager.getConnection(url);
@@ -346,7 +517,7 @@ public class SQLiteDatabase implements DatabaseHandler {
         });
     }
 
-    public boolean removeFromOwnAuctions(String player, String toRemove){
+    public boolean removeFromOwnAuctions(String player, String toRemove) {
         Bukkit.getScheduler().runTaskAsynchronously(AuctionMaster.plugin, () -> {
             try (
                     Connection Auctions = DriverManager.getConnection(url);
@@ -365,7 +536,7 @@ public class SQLiteDatabase implements DatabaseHandler {
         return true;
     }
 
-    public void resetOwnAuctions(String player){
+    public void resetOwnAuctions(String player) {
         Bukkit.getScheduler().runTaskAsynchronously(AuctionMaster.plugin, () -> {
             try (
                     Connection Auctions = DriverManager.getConnection(url);
@@ -382,7 +553,7 @@ public class SQLiteDatabase implements DatabaseHandler {
         });
     }
 
-    public void addToOwnAuctions(String player, String toAdd){
+    public void addToOwnAuctions(String player, String toAdd) {
         Bukkit.getScheduler().runTaskAsynchronously(AuctionMaster.plugin, () -> {
             try (
                     Connection Auctions = DriverManager.getConnection(url);
@@ -421,7 +592,7 @@ public class SQLiteDatabase implements DatabaseHandler {
         }
     }
 
-    public void addAllToBrowse(){
+    public void addAllToBrowse() {
         for (Auction auction : AuctionMaster.auctionsHandler.auctions.values())
             if (!auction.isEnded())
                 AuctionMaster.auctionsHandler.addToBrowse(auction);

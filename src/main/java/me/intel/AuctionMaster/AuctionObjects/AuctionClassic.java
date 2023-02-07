@@ -1,7 +1,6 @@
 package me.intel.AuctionMaster.AuctionObjects;
 
 import me.intel.AuctionMaster.API.Events.*;
-import me.intel.AuctionMaster.API.Events.*;
 import me.intel.AuctionMaster.AuctionMaster;
 import me.intel.AuctionMaster.Utils.Utils;
 import net.md_5.bungee.api.chat.ClickEvent;
@@ -265,7 +264,7 @@ public class AuctionClassic implements Auction{
         AuctionMaster.auctionsHandler.bidAuctions.getOrDefault(uuid, new ArrayList<>()).remove(this);
         if(AuctionMaster.auctionsHandler.bidAuctions.getOrDefault(uuid, new ArrayList<>()).isEmpty())
             AuctionMaster.auctionsHandler.bidAuctions.remove(uuid);
-
+        System.out.println("DUPA BISKUKA!");
         bids.claimBid(player);
         player.getInventory().addItem(item);
         Bukkit.getPluginManager().callEvent(new TopBidClaim(player, this, item));
@@ -347,7 +346,7 @@ public class AuctionClassic implements Auction{
         }
         String outbidMsg = "";
         for (String msj : AuctionMaster.configLoad.outbidMessage)
-            outbidMsg=outbidMsg+ Utils.chat(msj).replace("%outbid-player-display-name%", player.getDisplayName()).replace("%top-bid%", AuctionMaster.numberFormatHelper.formatNumber(coins)).replace("%bid-item%", displayName)+"\n";
+            outbidMsg=outbidMsg + Utils.chat(msj).replace("%outbid-player-display-name%", player.getDisplayName()).replace("%top-bid%", AuctionMaster.numberFormatHelper.formatNumber(coins)).replace("%bid-item%", displayName)+"\n";
         TextComponent clickMess = new TextComponent();
         clickMess.setText(outbidMsg.substring(0, outbidMsg.length()-1));
         clickMess.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/ahview "+id));
