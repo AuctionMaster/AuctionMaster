@@ -4,11 +4,14 @@ import me.intel.AuctionMaster.InputGUIs.ChatListener;
 import me.intel.AuctionMaster.AuctionMaster;
 import me.intel.AuctionMaster.Menus.CreateAuctionMainMenu;
 import me.intel.AuctionMaster.Utils.Utils;
+import net.wesjd.anvilgui.AnvilGUI;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 
 import static me.intel.AuctionMaster.AuctionMaster.utilsAPI;
 
@@ -45,11 +48,16 @@ public class StartingBidGUI {
     }
 
     private void anvilTrigger(Player p){
-        new net.wesjd.anvilgui.AnvilGUI.Builder()
-                .onComplete((target, reply) -> {
+        new AnvilGUI.Builder()
+                .onClose(stateSnapshot -> {
+                })
+                .onClick((slot, stateSnapshot) -> {
+                    if (slot != AnvilGUI.Slot.OUTPUT) {
+                        return Collections.emptyList();
+                    }
                     try{
-                        double timeInput = AuctionMaster.numberFormatHelper.useDecimals? Double.parseDouble(reply):Math.floor(Double.parseDouble(reply));
-                        if(timeInput<1){
+                        double timeInput = AuctionMaster.numberFormatHelper.useDecimals? Double.parseDouble(stateSnapshot.getText()):Math.floor(Double.parseDouble(stateSnapshot.getText()));
+                        if(timeInput < 1){
                             p.sendMessage(utilsAPI.chat(p, AuctionMaster.auctionsManagerCfg.getString("starting-bid-sign-deny")));
                         }
                         else
@@ -59,13 +67,13 @@ public class StartingBidGUI {
                     }
 
                     new CreateAuctionMainMenu(p);
-                    return net.wesjd.anvilgui.AnvilGUI.Response.close();
+                    return Arrays.asList(AnvilGUI.ResponseAction.close());
                 })
-                .itemLeft(paper.clone())
                 .text("")
                 .plugin(AuctionMaster.plugin)
                 .open(p);
     }
+
 
     private void chatTrigger(Player p){
         for(String line : AuctionMaster.auctionsManagerCfg.getStringList("starting-bid-sign-message"))

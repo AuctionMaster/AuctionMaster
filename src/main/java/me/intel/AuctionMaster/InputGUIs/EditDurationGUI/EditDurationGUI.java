@@ -5,12 +5,15 @@ import me.intel.AuctionMaster.InputGUIs.ChatListener;
 import me.intel.AuctionMaster.AuctionMaster;
 import me.intel.AuctionMaster.Menus.AdminMenus.ViewAuctionAdminMenu;
 import me.intel.AuctionMaster.Utils.Utils;
+import net.wesjd.anvilgui.AnvilGUI;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 
 import static me.intel.AuctionMaster.AuctionMaster.utilsAPI;
 
@@ -49,9 +52,14 @@ public class EditDurationGUI {
 
     private void anvilTrigger(Player p, Auction auction, String goBackTo, boolean rightClick){
         new net.wesjd.anvilgui.AnvilGUI.Builder()
-                .onComplete((target, reply) -> {
+                .onClose(stateSnapshot -> {
+                })
+                .onClick((slot, stateSnapshot) -> {
+                    if (slot != AnvilGUI.Slot.OUTPUT) {
+                        return Collections.emptyList();
+                    }
                     try{
-                        int timeInput = Integer.parseInt(reply);
+                        int timeInput = Integer.parseInt(stateSnapshot.getText());
                         if(rightClick)
                             auction.addMinutesToAuction(timeInput);
                         else
@@ -60,13 +68,13 @@ public class EditDurationGUI {
                         p.sendMessage(utilsAPI.chat(p, "&cInvalid number."));
                     }
                     new ViewAuctionAdminMenu(p, auction, goBackTo);
-                    return net.wesjd.anvilgui.AnvilGUI.Response.close();
+                    return Arrays.asList(AnvilGUI.ResponseAction.close());
                 })
-                .itemLeft(paper)
                 .text("")
                 .plugin(AuctionMaster.plugin)
                 .open(p);
     }
+
 
     private void chatTrigger(Player p, Auction auction, String goBackTo, boolean rightClick){
         p.sendMessage(utilsAPI.chat(p, "Enter minutes"));
