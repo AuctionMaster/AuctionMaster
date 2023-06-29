@@ -4,11 +4,14 @@ import me.intel.AuctionMaster.Menus.AdminMenus.DeliveryAdminMenu;
 import me.intel.AuctionMaster.Utils.Utils;
 import me.intel.AuctionMaster.AuctionMaster;
 import me.intel.AuctionMaster.InputGUIs.ChatListener;
+import net.wesjd.anvilgui.AnvilGUI;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 
 public class DeliveryGUI {
     private ItemStack paper;
@@ -43,21 +46,24 @@ public class DeliveryGUI {
     }
 
     private void anvilTrigger(Player p){
-        new net.wesjd.anvilgui.AnvilGUI.Builder()
-                .onComplete((target, reply) -> {
-                    try{
-                        new DeliveryAdminMenu(p, reply.replace(" ", "").equals("") ? null : reply);
-
-                    }catch(Exception ignored){
-                    }
-
-                    return net.wesjd.anvilgui.AnvilGUI.Response.close();
+        new AnvilGUI.Builder()
+                .onClose(stateSnapshot -> {
                 })
-                .itemLeft(paper)
+                .onClick((slot, stateSnapshot) -> {
+                    if (slot != AnvilGUI.Slot.OUTPUT) {
+                        return Collections.emptyList();
+                    }
+                    try {
+                        new DeliveryAdminMenu(p, stateSnapshot.getText().replace(" ", "").equals("") ? null : stateSnapshot.getText());
+                    } catch (Exception ignored) {}
+
+                    return Arrays.asList(AnvilGUI.ResponseAction.close());
+                })
                 .text("")
                 .plugin(AuctionMaster.plugin)
                 .open(p);
     }
+
 
     private void chatTrigger(Player p){
         p.sendMessage(Utils.chat("&7&m----------------"));

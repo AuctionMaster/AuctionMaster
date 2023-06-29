@@ -12,6 +12,8 @@ import org.bukkit.inventory.ItemStack;
 import net.wesjd.anvilgui.AnvilGUI;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 
 import static me.intel.AuctionMaster.AuctionMaster.utilsAPI;
 
@@ -49,24 +51,29 @@ public class BidSelectGUI {
 
     private void anvilTrigger(Player p, Auction auction, String goBackTo, double minimumBid){
         new AnvilGUI.Builder()
-                .onComplete((target, reply) -> {
-                    try{
-                        double bidSelect = AuctionMaster.numberFormatHelper.useDecimals? Double.parseDouble(reply):Math.floor(Double.parseDouble(reply));
-                        if(bidSelect>=minimumBid)
-                            new ViewAuctionMenu(target, auction, goBackTo, bidSelect);
-                        else
-                            new ViewAuctionMenu(target, auction, goBackTo, 0);
-                    }catch(Exception x){
-                        target.sendMessage(utilsAPI.chat(p, AuctionMaster.auctionsManagerCfg.getString("edit-bid-deny-message")));
-                        new ViewAuctionMenu(target, auction, goBackTo, 0);
+                .onClose(stateSnapshot -> {
+                })
+                .onClick((slot, stateSnapshot) -> {
+                    if (slot != AnvilGUI.Slot.OUTPUT) {
+                        return Collections.emptyList();
                     }
-
-                    return net.wesjd.anvilgui.AnvilGUI.Response.close();
+                    try{
+                        double bidSelect = AuctionMaster.numberFormatHelper.useDecimals ? Double.parseDouble(stateSnapshot.getText()) : Math.floor(Double.parseDouble(stateSnapshot.getText()));
+                        if(bidSelect >= minimumBid)
+                            new ViewAuctionMenu(stateSnapshot.getPlayer(), auction, goBackTo, bidSelect);
+                        else
+                            new ViewAuctionMenu(stateSnapshot.getPlayer(), auction, goBackTo, 0);
+                    }catch(Exception x){
+                        stateSnapshot.getPlayer().sendMessage(utilsAPI.chat(p, AuctionMaster.auctionsManagerCfg.getString("edit-bid-deny-message")));
+                        new ViewAuctionMenu(stateSnapshot.getPlayer(), auction, goBackTo, 0);
+                    }
+                    return Arrays.asList(AnvilGUI.ResponseAction.close());
                 })
                 .text("")
                 .plugin(AuctionMaster.plugin)
                 .open(p);
     }
+
 
     private void chatTrigger(Player p, Auction auction, String goBackTo, double minimumBid){
         for(String line : AuctionMaster.auctionsManagerCfg.getStringList("starting-bid-sign-message"))

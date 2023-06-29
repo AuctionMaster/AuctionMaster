@@ -4,12 +4,15 @@ import me.intel.AuctionMaster.InputGUIs.ChatListener;
 import me.intel.AuctionMaster.AuctionMaster;
 import me.intel.AuctionMaster.Menus.AdminMenus.DeliveryHandleMenu;
 import me.intel.AuctionMaster.Utils.Utils;
+import net.wesjd.anvilgui.AnvilGUI;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 
 public class DeliveryCoinsGUI {
     private ItemStack paper;
@@ -44,21 +47,25 @@ public class DeliveryCoinsGUI {
 
     private void anvilTrigger(Player p, double deliveryCoins, ArrayList<ItemStack> deliveryItems, String targetPlayerUUID, boolean send, Inventory inventory){
         new net.wesjd.anvilgui.AnvilGUI.Builder()
-                .onComplete((target, reply) -> {
+                .onClose(stateSnapshot -> {
+                })
+                .onClick((slot, stateSnapshot) -> {
+                    if (slot != AnvilGUI.Slot.OUTPUT) {
+                        return Collections.emptyList();
+                    }
                     try {
-                        new DeliveryHandleMenu(p, targetPlayerUUID, Double.parseDouble(reply), deliveryItems, send, inventory);
+                        new DeliveryHandleMenu(p, targetPlayerUUID, Double.parseDouble(stateSnapshot.getText()), deliveryItems, send, inventory);
                     }catch(Exception x){
                         p.sendMessage(Utils.chat("&cInvalid number!"));
                         new DeliveryHandleMenu(p, targetPlayerUUID, deliveryCoins, deliveryItems, send, inventory);
                     }
-
-                    return net.wesjd.anvilgui.AnvilGUI.Response.close();
+                    return Arrays.asList(AnvilGUI.ResponseAction.close());
                 })
-                .itemLeft(paper.clone())
                 .text("")
                 .plugin(AuctionMaster.plugin)
                 .open(p);
     }
+
 
     private void chatTrigger(Player p, double deliveryCoins, ArrayList<ItemStack> deliveryItems, String targetPlayerUUID, boolean send, Inventory inventory){
         p.sendMessage(Utils.chat("&7&m----------------"));

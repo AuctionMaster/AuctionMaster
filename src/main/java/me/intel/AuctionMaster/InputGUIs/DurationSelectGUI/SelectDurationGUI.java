@@ -11,6 +11,8 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 
 import static me.intel.AuctionMaster.AuctionMaster.utilsAPI;
 
@@ -51,31 +53,36 @@ public class SelectDurationGUI {
         ItemMeta meta = paperClone.getItemMeta();
         ArrayList<String> lore = new ArrayList<>();
         for(String line : meta.getLore())
-            lore.add(line.replace("%time-format%", minutes? AuctionMaster.configLoad.minutes: AuctionMaster.configLoad.hours));
+            lore.add(line.replace("%time-format%", minutes ? AuctionMaster.configLoad.minutes : AuctionMaster.configLoad.hours));
         meta.setLore(lore);
         paperClone.setItemMeta(meta);
 
-        new net.wesjd.anvilgui.AnvilGUI.Builder()
-                .onComplete((target, reply) -> {
+        new AnvilGUI.Builder()
+                .onClose(stateSnapshot -> {
+                })
+                .onClick((slot, stateSnapshot) -> {
+                    if (slot != AnvilGUI.Slot.OUTPUT) {
+                        return Collections.emptyList();
+                    }
                     try{
-                        int timeInput = Integer.parseInt(reply);
+                        int timeInput = Integer.parseInt(stateSnapshot.getText());
                         if(minutes){
-                            if(timeInput>59 || timeInput<1){
+                            if(timeInput > 59 || timeInput < 1){
                                 p.sendMessage(utilsAPI.chat(p, AuctionMaster.auctionsManagerCfg.getString("duration-sign-deny")));
                             }
                             else {
-                                AuctionMaster.auctionsHandler.startingDuration.put(p.getUniqueId().toString(), timeInput*60000);
+                                AuctionMaster.auctionsHandler.startingDuration.put(p.getUniqueId().toString(), timeInput * 60000);
                             }
                         }
                         else{
-                            if(timeInput>168 || timeInput<1){
+                            if(timeInput > 168 || timeInput < 1){
                                 p.sendMessage(utilsAPI.chat(p, AuctionMaster.auctionsManagerCfg.getString("duration-sign-deny")));
                             }
                             else{
-                                if(maximum_hours!=-1 && maximum_hours<timeInput)
+                                if(maximum_hours != -1 && maximum_hours < timeInput)
                                     p.sendMessage(utilsAPI.chat(p, AuctionMaster.plugin.getConfig().getString("duration-limit-reached-message")));
                                 else
-                                    AuctionMaster.auctionsHandler.startingDuration.put(p.getUniqueId().toString(), timeInput*3600000);
+                                    AuctionMaster.auctionsHandler.startingDuration.put(p.getUniqueId().toString(), timeInput * 3600000);
                             }
                         }
                     }catch(Exception x){
@@ -83,14 +90,13 @@ public class SelectDurationGUI {
                     }
 
                     new CreateAuctionMainMenu(p);
-
-                    return AnvilGUI.Response.close();
+                    return Arrays.asList(AnvilGUI.ResponseAction.close());
                 })
-                .itemLeft(paperClone)
                 .text("")
                 .plugin(AuctionMaster.plugin)
                 .open(p);
     }
+
 
     private void chatTrigger(Player p, int maximum_hours, boolean minutes){
         for(String line : AuctionMaster.auctionsManagerCfg.getStringList("duration-sign-message"))
