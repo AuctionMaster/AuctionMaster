@@ -1,6 +1,6 @@
 name: AuctionMaster
-authors: [Intel]
-version: 4.1.3
+authors: [Intel, SedatTR, GithubContributors]
+version: 4.8.0
 main: me.intel.AuctionMaster.AuctionMaster
 description: The best auction house system!
 website: https://discord.gg/nchk86TKMT
