@@ -6,7 +6,7 @@
 
     <groupId>me.intel.AuctionMaster</groupId>
     <artifactId>AuctionMaster</artifactId>
-    <version>4.6.0</version>
+    <version>4.8.0</version>
     <build>
         <plugins>
             <plugin>
