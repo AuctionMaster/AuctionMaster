@@ -91,8 +91,7 @@ public class SQLiteDatabase implements DatabaseHandler {
                                 " item MEDIUMTEXT, " +
                                 " displayName VARCHAR(40), " +
                                 " bids MEDIUMTEXT, " +
-                                " sellerClaimed BOOL, " +
-                                " buyerClaimed BOOL, " +
+                                " sellerClaimed BOOL, "+
                                 " PRIMARY KEY ( id ))"
                 )
         ) {
@@ -392,12 +391,12 @@ public class SQLiteDatabase implements DatabaseHandler {
         return false;
     }
 
-    public void insertAuction(Auction auction) {
+    public void insertAuction(Auction auction){
         Bukkit.getScheduler().runTaskAsynchronously(AuctionMaster.plugin, () -> {
-            try (
+            try(
                     Connection Auctions = DriverManager.getConnection(url);
-                    PreparedStatement stmt = Auctions.prepareStatement("INSERT INTO Auctions VALUES (?, ?, ?, ?, ?, ?, ?, ?, '" + (auction.isBIN() ? "BIN" : "") + " 0,,, ', 0)")
-            ) {
+                    PreparedStatement stmt = Auctions.prepareStatement("INSERT INTO Auctions VALUES (?, ?, ?, ?, ?, ?, ?, ?, '"+(auction.isBIN()?"BIN":"")+" 0,,, ', 0)")
+            ){
                 stmt.setString(1, auction.getId());
                 stmt.setDouble(2, auction.getCoins());
                 stmt.setLong(3, auction.getEndingDate());
@@ -407,7 +406,7 @@ public class SQLiteDatabase implements DatabaseHandler {
                 stmt.setString(7, Utils.itemToBase64(auction.getItemStack()));
                 stmt.setString(8, auction.getDisplayName());
                 stmt.executeUpdate();
-            } catch (Exception x) {
+            }catch(Exception x){
                 if (x.getMessage().startsWith("[SQLITE_BUSY]"))
                     Bukkit.getScheduler().runTaskLaterAsynchronously(AuctionMaster.plugin, () -> insertAuction(auction), 7);
                 else
