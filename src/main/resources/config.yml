@@ -31,22 +31,22 @@ events:
   # %item% = Name of item, %player% = Player's name, %price% Price of item
   url: ''
   AuctionCreate:
-    Enabled: true
+    Enabled: false
     Message: '%player% created auction for %item% at price %price%'
   AuctionDelete:
-    Enabled: true
+    Enabled: false
     Message: '%player% deleted auction for %item%'
   Purchase:
-    Enabled: true
+    Enabled: false
     Message: '%player% purchased %item% for %price%'
   ItemClaim:
-    Enabled: true
+    Enabled: false
     Message: "%player% claimed %item%"
   ClaimEnded:
-    Enabled: true
+    Enabled: false
     Message: "%player% claimed a ended auction for %item% at price %price%"
   ClaimExpired:
-    Enabled: true
+    Enabled: false
     Message: "%player% claimed a expired auction for %item%"
 database:
   type: "sqlite" # mysql or sqlite (mysql is currently beta)
