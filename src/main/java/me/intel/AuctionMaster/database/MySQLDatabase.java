@@ -131,7 +131,7 @@ public class MySQLDatabase implements DatabaseHandler {
                                 " bids MEDIUMTEXT, " +
                                 " sellerClaimed BOOL, " +
                                 " buyerClaimed BOOL, " +
-                                " buyerName BOOL VARCHAR(16), " +
+                                " buyerName VARCHAR(16), " +
                                 " PRIMARY KEY ( id ))"
                 )
         ) {
